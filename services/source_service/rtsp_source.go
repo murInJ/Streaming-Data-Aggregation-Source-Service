@@ -81,7 +81,7 @@ func (e *EntityRtsp) goroutine_rtsp_source() {
 	c, err := e.startup_rstp()
 	if err != nil {
 		e.Status = ERR
-		klog.Errorf("source[rtsp]: %s open failed.\n", e.Name)
+		klog.Errorf("source[rtsp]: %s open failed.", e.Name)
 		return
 	}
 	e.Status = OPEN

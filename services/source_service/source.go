@@ -4,6 +4,7 @@ import (
 	config "SDAS/config"
 	"encoding/json"
 	"errors"
+	"reflect"
 	"sync"
 
 	"github.com/cloudwego/kitex/pkg/klog"
@@ -55,15 +56,14 @@ func refreshSource() {
 	NewSources := []config.SOURCE{}
 
 	Sources.Range(func(key, value interface{}) bool {
-		entity := *value.(*SOURCE_ENTITY)
-		sourceString, err := entity.GetSourceString()
-		if err != nil {
-			klog.Error(err)
-			return true
-		}
+		v := reflect.ValueOf(value)
+
+		res := v.MethodByName("GetSourceString").Call([]reflect.Value{})
+		sourceString := res[0].Interface().(string)
+
 		source := config.SOURCE{
-			Name:    sourceString,
-			Type:    entity.GetType(),
+			Name:    v.MethodByName("GetName").Call([]reflect.Value{})[0].Interface().(string),
+			Type:    v.MethodByName("GetType").Call([]reflect.Value{})[0].Interface().(string),
 			Content: sourceString,
 		}
 		NewSources = append(NewSources, source)
@@ -85,8 +85,8 @@ func AddRtspSource(source_config *config.SOURCE) error {
 
 func RemoveSource(name string) {
 	if i, ok := Sources.Load(name); ok {
-		entity := *i.(*SOURCE_ENTITY)
-		entity.Stop()
+		v := reflect.ValueOf(i)
+		v.MethodByName("Stop").Call([]reflect.Value{})
 		Sources.Delete(name)
 		refreshSource()
 		config.SaveConfigJSON("./config.json")

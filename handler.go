@@ -58,32 +58,70 @@ func (s *SDASImpl) ListSources(ctx context.Context) (resp *api.ListSourcesRespon
 	return resp, nil
 }
 
-// SetPipeline implements the SDASImpl interface.
-func (s *SDASImpl) SetPipeline(ctx context.Context, req *api.SetPipelineRequest) (resp *api.SetPipelineResponse, err error) {
-	// TODO: Your code here...
-	return
-}
-
-// QueryPipeline implements the SDASImpl interface.
-func (s *SDASImpl) QueryPipeline(ctx context.Context) (resp *api.QueryPipelineResponse, err error) {
-	// TODO: Your code here...
-	return
-}
-
 // AddExpose implements the SDASImpl interface.
 func (s *SDASImpl) AddExpose(ctx context.Context, req *api.AddExposeRequest) (resp *api.AddExposeResponse, err error) {
-	// TODO: Your code here...
-	return
+	err = handler.AddExposeHandler(req.Expose.Name, req.Expose.Type, req.Expose.Content, req.Expose.SourceName)
+	if err != nil {
+		resp = &api.AddExposeResponse{
+			Code:    -1,
+			Message: err.Error(),
+		}
+		return resp, err
+	}
+
+	resp = &api.AddExposeResponse{
+		Code:    0,
+		Message: "success",
+	}
+
+	return resp, nil
 }
 
 // RemoveExpose implements the SDASImpl interface.
 func (s *SDASImpl) RemoveExpose(ctx context.Context, req *api.RemoveExposeRequest) (resp *api.RemoveExposeResponse, err error) {
-	// TODO: Your code here...
-	return
+	handler.RemoveExposeHandler(req.Name)
+	resp = &api.RemoveExposeResponse{
+		Code:    0,
+		Message: "success",
+	}
+
+	return resp, nil
 }
 
 // ListExposes implements the SDASImpl interface.
 func (s *SDASImpl) ListExposes(ctx context.Context) (resp *api.ListExposesResponse, err error) {
+	exposes := handler.ListExposeHandler()
+	apiExposes := make([]*api.Expose, 0)
+	for _, expose := range exposes {
+		apiExposes = append(apiExposes, &api.Expose{
+			Name:       expose.Name,
+			Type:       expose.Type,
+			Content:    expose.Content,
+			SourceName: expose.SourceName,
+		})
+	}
+	resp = &api.ListExposesResponse{
+		Code:    0,
+		Message: "success",
+		Exposes: apiExposes,
+	}
+	return resp, nil
+}
+
+// AddPipeline implements the SDASImpl interface.
+func (s *SDASImpl) AddPipeline(ctx context.Context, req *api.AddPipelineRequest) (resp *api.AddPipelineResponse, err error) {
+	// TODO: Your code here...
+	return
+}
+
+// RemovePipeline implements the SDASImpl interface.
+func (s *SDASImpl) RemovePipeline(ctx context.Context, req *api.RemovePipelineRequest) (resp *api.RemovePipelineResponse, err error) {
+	// TODO: Your code here...
+	return
+}
+
+// ListPipeline implements the SDASImpl interface.
+func (s *SDASImpl) ListPipeline(ctx context.Context) (resp *api.ListPipelinesResponse, err error) {
 	// TODO: Your code here...
 	return
 }

@@ -4,6 +4,7 @@ struct Expose{
         1: string type
         2: string name
         3: string content
+        4: string source_name
 }
 
 struct AddExposeRequest {

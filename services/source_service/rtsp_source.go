@@ -4,6 +4,7 @@ import (
 	config "SDAS/config"
 	decoder "SDAS/services/source_service/decoder"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"image"
 	"runtime"
@@ -29,31 +30,41 @@ type MessageRtsp struct {
 	NTP int64
 }
 
-type EntityRtsp struct {
+type SourceEntityRtsp struct {
 	ControlChannel *chan int
 	OutputChannel  *chan MessageRtsp
 	Status         int
 	Source         *config.SOURCE_RTSP
 	Name           string
 	Type           string
+	Decoder        any
 }
 
-func NewEntityRtsp(name string, source *config.SOURCE_RTSP) *EntityRtsp {
+func NewSourceEntityRtsp(name string, source *config.SOURCE_RTSP) (*SourceEntityRtsp, error) {
 	control_channel := make(chan int)
 	output_channel := make(chan MessageRtsp, 1024)
-
-	entity := &EntityRtsp{
-		Name:           name,
-		Type:           "rtsp",
-		ControlChannel: &control_channel,
-		OutputChannel:  &output_channel,
-		Status:         CLOSE,
-		Source:         source,
+	if source.Format == "h264" {
+		frameDec := &decoder.H264Decoder{}
+		err := frameDec.Initialize()
+		if err != nil {
+			return nil, err
+		}
+		frameDec.Initialize()
+		entity := &SourceEntityRtsp{
+			Name:           name,
+			Type:           "rtsp",
+			ControlChannel: &control_channel,
+			OutputChannel:  &output_channel,
+			Status:         CLOSE,
+			Source:         source,
+			Decoder:        frameDec,
+		}
+		return entity, nil
 	}
-	return entity
+	return nil, errors.New("unknown source type")
 }
 
-func (e *EntityRtsp) GetSourceString() (string, error) {
+func (e *SourceEntityRtsp) GetSourceString() (string, error) {
 	b, err := json.Marshal(e.Source)
 	if err != nil {
 		return "", err
@@ -61,23 +72,23 @@ func (e *EntityRtsp) GetSourceString() (string, error) {
 	return string(b), nil
 }
 
-func (e *EntityRtsp) GetName() string {
+func (e *SourceEntityRtsp) GetName() string {
 	return e.Name
 }
 
-func (e *EntityRtsp) GetType() string {
+func (e *SourceEntityRtsp) GetType() string {
 	return e.Type
 }
 
-func (e *EntityRtsp) Start() {
+func (e *SourceEntityRtsp) Start() {
 	go e.goroutine_rtsp_source()
 }
 
-func (e *EntityRtsp) Stop() {
+func (e *SourceEntityRtsp) Stop() {
 	*e.ControlChannel <- CLOSE
 }
 
-func (e *EntityRtsp) goroutine_rtsp_source() {
+func (e *SourceEntityRtsp) goroutine_rtsp_source() {
 	c, err := e.startup_rstp()
 	if err != nil {
 		e.Status = ERR
@@ -92,6 +103,10 @@ func (e *EntityRtsp) goroutine_rtsp_source() {
 			switch command {
 			case CLOSE:
 				c.Close()
+				switch e.Source.Format {
+				case "h264":
+					e.Decoder.(*decoder.H264Decoder).Close()
+				}
 				e.Status = CLOSE
 				klog.Infof("source[rtsp]: %s closed.\n", e.Name)
 				return
@@ -100,7 +115,7 @@ func (e *EntityRtsp) goroutine_rtsp_source() {
 	}
 }
 
-func (e *EntityRtsp) startup_rstp() (*gortsplib.Client, error) {
+func (e *SourceEntityRtsp) startup_rstp() (*gortsplib.Client, error) {
 
 	c := gortsplib.Client{}
 
@@ -143,7 +158,7 @@ func (e *EntityRtsp) startup_rstp() (*gortsplib.Client, error) {
 	return &c, nil
 }
 
-func (e *EntityRtsp) handler_h264(c *gortsplib.Client, desc *description.Session) error {
+func (e *SourceEntityRtsp) handler_h264(c *gortsplib.Client, desc *description.Session) error {
 	var forma *format.H264
 	medi := desc.FindFormat(&forma)
 	if medi == nil {
@@ -158,19 +173,11 @@ func (e *EntityRtsp) handler_h264(c *gortsplib.Client, desc *description.Session
 		return err
 	}
 
-	frameDec := &decoder.H264Decoder{}
-	err = frameDec.Initialize()
-	if err != nil {
-		klog.Error(err)
-		return err
-	}
-	defer frameDec.Close()
-
 	if forma.SPS != nil {
-		frameDec.Decode(forma.SPS)
+		e.Decoder.(*decoder.H264Decoder).Decode(forma.SPS)
 	}
 	if forma.PPS != nil {
-		frameDec.Decode(forma.PPS)
+		e.Decoder.(*decoder.H264Decoder).Decode(forma.PPS)
 	}
 
 	// setup a single media
@@ -190,10 +197,11 @@ func (e *EntityRtsp) handler_h264(c *gortsplib.Client, desc *description.Session
 			}
 			return
 		}
+		ntp, ntpAvailable := c.PacketNTP(medi, pkt)
 
 		for _, nalu := range au {
 			// convert NALUs into RGBA frames
-			img, err := frameDec.Decode(nalu)
+			img, err := e.Decoder.(*decoder.H264Decoder).Decode(nalu)
 			if err != nil {
 				panic(err)
 			}
@@ -203,8 +211,11 @@ func (e *EntityRtsp) handler_h264(c *gortsplib.Client, desc *description.Session
 				runtime.Gosched()
 				continue
 			}
-
-			*e.OutputChannel <- MessageRtsp{Img: &img, NTP: time.Now().UnixNano()}
+			if ntpAvailable {
+				*e.OutputChannel <- MessageRtsp{Img: &img, NTP: ntp.UnixNano()}
+			} else {
+				*e.OutputChannel <- MessageRtsp{Img: &img, NTP: time.Now().UnixNano()}
+			}
 
 		}
 	})

@@ -8,8 +8,9 @@ service SDAS {
     source.RemoveSourceResponse RemoveSource(1: source.RemoveSourceRequest req)
     source.ListSourcesResponse ListSources()
 
-    pipeline.SetPipelineResponse SetPipeline(1: pipeline.SetPipelineRequest req)
-    pipeline.QueryPipelineResponse QueryPipeline()
+    pipeline.AddPipelineResponse AddPipeline(1: pipeline.AddPipelineRequest req)
+    pipeline.RemovePipelineResponse RemovePipeline(1: pipeline.RemovePipelineRequest req)
+    pipeline.ListPipelinesResponse ListPipeline()
 
     expose.AddExposeResponse AddExpose(1: expose.AddExposeRequest req)
     expose.RemoveExposeResponse RemoveExpose(1: expose.RemoveExposeRequest req)

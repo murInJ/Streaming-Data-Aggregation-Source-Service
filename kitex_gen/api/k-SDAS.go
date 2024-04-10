@@ -747,7 +747,7 @@ func (p *SDASListSourcesResult) field0Length() int {
 	return l
 }
 
-func (p *SDASSetPipelineArgs) FastRead(buf []byte) (int, error) {
+func (p *SDASAddPipelineArgs) FastRead(buf []byte) (int, error) {
 	var err error
 	var offset int
 	var l int
@@ -809,7 +809,7 @@ ReadStructBeginError:
 ReadFieldBeginError:
 	return offset, thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
 ReadFieldError:
-	return offset, thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_SDASSetPipelineArgs[fieldId]), err)
+	return offset, thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_SDASAddPipelineArgs[fieldId]), err)
 SkipFieldError:
 	return offset, thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
 ReadFieldEndError:
@@ -818,10 +818,10 @@ ReadStructEndError:
 	return offset, thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
-func (p *SDASSetPipelineArgs) FastReadField1(buf []byte) (int, error) {
+func (p *SDASAddPipelineArgs) FastReadField1(buf []byte) (int, error) {
 	offset := 0
 
-	tmp := NewSetPipelineRequest()
+	tmp := NewAddPipelineRequest()
 	if l, err := tmp.FastRead(buf[offset:]); err != nil {
 		return offset, err
 	} else {
@@ -832,13 +832,13 @@ func (p *SDASSetPipelineArgs) FastReadField1(buf []byte) (int, error) {
 }
 
 // for compatibility
-func (p *SDASSetPipelineArgs) FastWrite(buf []byte) int {
+func (p *SDASAddPipelineArgs) FastWrite(buf []byte) int {
 	return 0
 }
 
-func (p *SDASSetPipelineArgs) FastWriteNocopy(buf []byte, binaryWriter bthrift.BinaryWriter) int {
+func (p *SDASAddPipelineArgs) FastWriteNocopy(buf []byte, binaryWriter bthrift.BinaryWriter) int {
 	offset := 0
-	offset += bthrift.Binary.WriteStructBegin(buf[offset:], "SetPipeline_args")
+	offset += bthrift.Binary.WriteStructBegin(buf[offset:], "AddPipeline_args")
 	if p != nil {
 		offset += p.fastWriteField1(buf[offset:], binaryWriter)
 	}
@@ -847,9 +847,9 @@ func (p *SDASSetPipelineArgs) FastWriteNocopy(buf []byte, binaryWriter bthrift.B
 	return offset
 }
 
-func (p *SDASSetPipelineArgs) BLength() int {
+func (p *SDASAddPipelineArgs) BLength() int {
 	l := 0
-	l += bthrift.Binary.StructBeginLength("SetPipeline_args")
+	l += bthrift.Binary.StructBeginLength("AddPipeline_args")
 	if p != nil {
 		l += p.field1Length()
 	}
@@ -858,7 +858,7 @@ func (p *SDASSetPipelineArgs) BLength() int {
 	return l
 }
 
-func (p *SDASSetPipelineArgs) fastWriteField1(buf []byte, binaryWriter bthrift.BinaryWriter) int {
+func (p *SDASAddPipelineArgs) fastWriteField1(buf []byte, binaryWriter bthrift.BinaryWriter) int {
 	offset := 0
 	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "req", thrift.STRUCT, 1)
 	offset += p.Req.FastWriteNocopy(buf[offset:], binaryWriter)
@@ -866,7 +866,7 @@ func (p *SDASSetPipelineArgs) fastWriteField1(buf []byte, binaryWriter bthrift.B
 	return offset
 }
 
-func (p *SDASSetPipelineArgs) field1Length() int {
+func (p *SDASAddPipelineArgs) field1Length() int {
 	l := 0
 	l += bthrift.Binary.FieldBeginLength("req", thrift.STRUCT, 1)
 	l += p.Req.BLength()
@@ -874,7 +874,7 @@ func (p *SDASSetPipelineArgs) field1Length() int {
 	return l
 }
 
-func (p *SDASSetPipelineResult) FastRead(buf []byte) (int, error) {
+func (p *SDASAddPipelineResult) FastRead(buf []byte) (int, error) {
 	var err error
 	var offset int
 	var l int
@@ -936,7 +936,7 @@ ReadStructBeginError:
 ReadFieldBeginError:
 	return offset, thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
 ReadFieldError:
-	return offset, thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_SDASSetPipelineResult[fieldId]), err)
+	return offset, thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_SDASAddPipelineResult[fieldId]), err)
 SkipFieldError:
 	return offset, thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
 ReadFieldEndError:
@@ -945,10 +945,10 @@ ReadStructEndError:
 	return offset, thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
-func (p *SDASSetPipelineResult) FastReadField0(buf []byte) (int, error) {
+func (p *SDASAddPipelineResult) FastReadField0(buf []byte) (int, error) {
 	offset := 0
 
-	tmp := NewSetPipelineResponse()
+	tmp := NewAddPipelineResponse()
 	if l, err := tmp.FastRead(buf[offset:]); err != nil {
 		return offset, err
 	} else {
@@ -959,13 +959,13 @@ func (p *SDASSetPipelineResult) FastReadField0(buf []byte) (int, error) {
 }
 
 // for compatibility
-func (p *SDASSetPipelineResult) FastWrite(buf []byte) int {
+func (p *SDASAddPipelineResult) FastWrite(buf []byte) int {
 	return 0
 }
 
-func (p *SDASSetPipelineResult) FastWriteNocopy(buf []byte, binaryWriter bthrift.BinaryWriter) int {
+func (p *SDASAddPipelineResult) FastWriteNocopy(buf []byte, binaryWriter bthrift.BinaryWriter) int {
 	offset := 0
-	offset += bthrift.Binary.WriteStructBegin(buf[offset:], "SetPipeline_result")
+	offset += bthrift.Binary.WriteStructBegin(buf[offset:], "AddPipeline_result")
 	if p != nil {
 		offset += p.fastWriteField0(buf[offset:], binaryWriter)
 	}
@@ -974,9 +974,9 @@ func (p *SDASSetPipelineResult) FastWriteNocopy(buf []byte, binaryWriter bthrift
 	return offset
 }
 
-func (p *SDASSetPipelineResult) BLength() int {
+func (p *SDASAddPipelineResult) BLength() int {
 	l := 0
-	l += bthrift.Binary.StructBeginLength("SetPipeline_result")
+	l += bthrift.Binary.StructBeginLength("AddPipeline_result")
 	if p != nil {
 		l += p.field0Length()
 	}
@@ -985,7 +985,7 @@ func (p *SDASSetPipelineResult) BLength() int {
 	return l
 }
 
-func (p *SDASSetPipelineResult) fastWriteField0(buf []byte, binaryWriter bthrift.BinaryWriter) int {
+func (p *SDASAddPipelineResult) fastWriteField0(buf []byte, binaryWriter bthrift.BinaryWriter) int {
 	offset := 0
 	if p.IsSetSuccess() {
 		offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "success", thrift.STRUCT, 0)
@@ -995,7 +995,7 @@ func (p *SDASSetPipelineResult) fastWriteField0(buf []byte, binaryWriter bthrift
 	return offset
 }
 
-func (p *SDASSetPipelineResult) field0Length() int {
+func (p *SDASAddPipelineResult) field0Length() int {
 	l := 0
 	if p.IsSetSuccess() {
 		l += bthrift.Binary.FieldBeginLength("success", thrift.STRUCT, 0)
@@ -1005,7 +1005,265 @@ func (p *SDASSetPipelineResult) field0Length() int {
 	return l
 }
 
-func (p *SDASQueryPipelineArgs) FastRead(buf []byte) (int, error) {
+func (p *SDASRemovePipelineArgs) FastRead(buf []byte) (int, error) {
+	var err error
+	var offset int
+	var l int
+	var fieldTypeId thrift.TType
+	var fieldId int16
+	_, l, err = bthrift.Binary.ReadStructBegin(buf)
+	offset += l
+	if err != nil {
+		goto ReadStructBeginError
+	}
+
+	for {
+		_, fieldTypeId, fieldId, l, err = bthrift.Binary.ReadFieldBegin(buf[offset:])
+		offset += l
+		if err != nil {
+			goto ReadFieldBeginError
+		}
+		if fieldTypeId == thrift.STOP {
+			break
+		}
+		switch fieldId {
+		case 1:
+			if fieldTypeId == thrift.STRUCT {
+				l, err = p.FastReadField1(buf[offset:])
+				offset += l
+				if err != nil {
+					goto ReadFieldError
+				}
+			} else {
+				l, err = bthrift.Binary.Skip(buf[offset:], fieldTypeId)
+				offset += l
+				if err != nil {
+					goto SkipFieldError
+				}
+			}
+		default:
+			l, err = bthrift.Binary.Skip(buf[offset:], fieldTypeId)
+			offset += l
+			if err != nil {
+				goto SkipFieldError
+			}
+		}
+
+		l, err = bthrift.Binary.ReadFieldEnd(buf[offset:])
+		offset += l
+		if err != nil {
+			goto ReadFieldEndError
+		}
+	}
+	l, err = bthrift.Binary.ReadStructEnd(buf[offset:])
+	offset += l
+	if err != nil {
+		goto ReadStructEndError
+	}
+
+	return offset, nil
+ReadStructBeginError:
+	return offset, thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
+ReadFieldBeginError:
+	return offset, thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
+ReadFieldError:
+	return offset, thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_SDASRemovePipelineArgs[fieldId]), err)
+SkipFieldError:
+	return offset, thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
+ReadFieldEndError:
+	return offset, thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
+ReadStructEndError:
+	return offset, thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+}
+
+func (p *SDASRemovePipelineArgs) FastReadField1(buf []byte) (int, error) {
+	offset := 0
+
+	tmp := NewRemovePipelineRequest()
+	if l, err := tmp.FastRead(buf[offset:]); err != nil {
+		return offset, err
+	} else {
+		offset += l
+	}
+	p.Req = tmp
+	return offset, nil
+}
+
+// for compatibility
+func (p *SDASRemovePipelineArgs) FastWrite(buf []byte) int {
+	return 0
+}
+
+func (p *SDASRemovePipelineArgs) FastWriteNocopy(buf []byte, binaryWriter bthrift.BinaryWriter) int {
+	offset := 0
+	offset += bthrift.Binary.WriteStructBegin(buf[offset:], "RemovePipeline_args")
+	if p != nil {
+		offset += p.fastWriteField1(buf[offset:], binaryWriter)
+	}
+	offset += bthrift.Binary.WriteFieldStop(buf[offset:])
+	offset += bthrift.Binary.WriteStructEnd(buf[offset:])
+	return offset
+}
+
+func (p *SDASRemovePipelineArgs) BLength() int {
+	l := 0
+	l += bthrift.Binary.StructBeginLength("RemovePipeline_args")
+	if p != nil {
+		l += p.field1Length()
+	}
+	l += bthrift.Binary.FieldStopLength()
+	l += bthrift.Binary.StructEndLength()
+	return l
+}
+
+func (p *SDASRemovePipelineArgs) fastWriteField1(buf []byte, binaryWriter bthrift.BinaryWriter) int {
+	offset := 0
+	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "req", thrift.STRUCT, 1)
+	offset += p.Req.FastWriteNocopy(buf[offset:], binaryWriter)
+	offset += bthrift.Binary.WriteFieldEnd(buf[offset:])
+	return offset
+}
+
+func (p *SDASRemovePipelineArgs) field1Length() int {
+	l := 0
+	l += bthrift.Binary.FieldBeginLength("req", thrift.STRUCT, 1)
+	l += p.Req.BLength()
+	l += bthrift.Binary.FieldEndLength()
+	return l
+}
+
+func (p *SDASRemovePipelineResult) FastRead(buf []byte) (int, error) {
+	var err error
+	var offset int
+	var l int
+	var fieldTypeId thrift.TType
+	var fieldId int16
+	_, l, err = bthrift.Binary.ReadStructBegin(buf)
+	offset += l
+	if err != nil {
+		goto ReadStructBeginError
+	}
+
+	for {
+		_, fieldTypeId, fieldId, l, err = bthrift.Binary.ReadFieldBegin(buf[offset:])
+		offset += l
+		if err != nil {
+			goto ReadFieldBeginError
+		}
+		if fieldTypeId == thrift.STOP {
+			break
+		}
+		switch fieldId {
+		case 0:
+			if fieldTypeId == thrift.STRUCT {
+				l, err = p.FastReadField0(buf[offset:])
+				offset += l
+				if err != nil {
+					goto ReadFieldError
+				}
+			} else {
+				l, err = bthrift.Binary.Skip(buf[offset:], fieldTypeId)
+				offset += l
+				if err != nil {
+					goto SkipFieldError
+				}
+			}
+		default:
+			l, err = bthrift.Binary.Skip(buf[offset:], fieldTypeId)
+			offset += l
+			if err != nil {
+				goto SkipFieldError
+			}
+		}
+
+		l, err = bthrift.Binary.ReadFieldEnd(buf[offset:])
+		offset += l
+		if err != nil {
+			goto ReadFieldEndError
+		}
+	}
+	l, err = bthrift.Binary.ReadStructEnd(buf[offset:])
+	offset += l
+	if err != nil {
+		goto ReadStructEndError
+	}
+
+	return offset, nil
+ReadStructBeginError:
+	return offset, thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
+ReadFieldBeginError:
+	return offset, thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
+ReadFieldError:
+	return offset, thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_SDASRemovePipelineResult[fieldId]), err)
+SkipFieldError:
+	return offset, thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
+ReadFieldEndError:
+	return offset, thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
+ReadStructEndError:
+	return offset, thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+}
+
+func (p *SDASRemovePipelineResult) FastReadField0(buf []byte) (int, error) {
+	offset := 0
+
+	tmp := NewRemovePipelineResponse()
+	if l, err := tmp.FastRead(buf[offset:]); err != nil {
+		return offset, err
+	} else {
+		offset += l
+	}
+	p.Success = tmp
+	return offset, nil
+}
+
+// for compatibility
+func (p *SDASRemovePipelineResult) FastWrite(buf []byte) int {
+	return 0
+}
+
+func (p *SDASRemovePipelineResult) FastWriteNocopy(buf []byte, binaryWriter bthrift.BinaryWriter) int {
+	offset := 0
+	offset += bthrift.Binary.WriteStructBegin(buf[offset:], "RemovePipeline_result")
+	if p != nil {
+		offset += p.fastWriteField0(buf[offset:], binaryWriter)
+	}
+	offset += bthrift.Binary.WriteFieldStop(buf[offset:])
+	offset += bthrift.Binary.WriteStructEnd(buf[offset:])
+	return offset
+}
+
+func (p *SDASRemovePipelineResult) BLength() int {
+	l := 0
+	l += bthrift.Binary.StructBeginLength("RemovePipeline_result")
+	if p != nil {
+		l += p.field0Length()
+	}
+	l += bthrift.Binary.FieldStopLength()
+	l += bthrift.Binary.StructEndLength()
+	return l
+}
+
+func (p *SDASRemovePipelineResult) fastWriteField0(buf []byte, binaryWriter bthrift.BinaryWriter) int {
+	offset := 0
+	if p.IsSetSuccess() {
+		offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "success", thrift.STRUCT, 0)
+		offset += p.Success.FastWriteNocopy(buf[offset:], binaryWriter)
+		offset += bthrift.Binary.WriteFieldEnd(buf[offset:])
+	}
+	return offset
+}
+
+func (p *SDASRemovePipelineResult) field0Length() int {
+	l := 0
+	if p.IsSetSuccess() {
+		l += bthrift.Binary.FieldBeginLength("success", thrift.STRUCT, 0)
+		l += p.Success.BLength()
+		l += bthrift.Binary.FieldEndLength()
+	}
+	return l
+}
+
+func (p *SDASListPipelineArgs) FastRead(buf []byte) (int, error) {
 	var err error
 	var offset int
 	var l int
@@ -1058,13 +1316,13 @@ ReadStructEndError:
 }
 
 // for compatibility
-func (p *SDASQueryPipelineArgs) FastWrite(buf []byte) int {
+func (p *SDASListPipelineArgs) FastWrite(buf []byte) int {
 	return 0
 }
 
-func (p *SDASQueryPipelineArgs) FastWriteNocopy(buf []byte, binaryWriter bthrift.BinaryWriter) int {
+func (p *SDASListPipelineArgs) FastWriteNocopy(buf []byte, binaryWriter bthrift.BinaryWriter) int {
 	offset := 0
-	offset += bthrift.Binary.WriteStructBegin(buf[offset:], "QueryPipeline_args")
+	offset += bthrift.Binary.WriteStructBegin(buf[offset:], "ListPipeline_args")
 	if p != nil {
 	}
 	offset += bthrift.Binary.WriteFieldStop(buf[offset:])
@@ -1072,9 +1330,9 @@ func (p *SDASQueryPipelineArgs) FastWriteNocopy(buf []byte, binaryWriter bthrift
 	return offset
 }
 
-func (p *SDASQueryPipelineArgs) BLength() int {
+func (p *SDASListPipelineArgs) BLength() int {
 	l := 0
-	l += bthrift.Binary.StructBeginLength("QueryPipeline_args")
+	l += bthrift.Binary.StructBeginLength("ListPipeline_args")
 	if p != nil {
 	}
 	l += bthrift.Binary.FieldStopLength()
@@ -1082,7 +1340,7 @@ func (p *SDASQueryPipelineArgs) BLength() int {
 	return l
 }
 
-func (p *SDASQueryPipelineResult) FastRead(buf []byte) (int, error) {
+func (p *SDASListPipelineResult) FastRead(buf []byte) (int, error) {
 	var err error
 	var offset int
 	var l int
@@ -1144,7 +1402,7 @@ ReadStructBeginError:
 ReadFieldBeginError:
 	return offset, thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
 ReadFieldError:
-	return offset, thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_SDASQueryPipelineResult[fieldId]), err)
+	return offset, thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_SDASListPipelineResult[fieldId]), err)
 SkipFieldError:
 	return offset, thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
 ReadFieldEndError:
@@ -1153,10 +1411,10 @@ ReadStructEndError:
 	return offset, thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
-func (p *SDASQueryPipelineResult) FastReadField0(buf []byte) (int, error) {
+func (p *SDASListPipelineResult) FastReadField0(buf []byte) (int, error) {
 	offset := 0
 
-	tmp := NewQueryPipelineResponse()
+	tmp := NewListPipelinesResponse()
 	if l, err := tmp.FastRead(buf[offset:]); err != nil {
 		return offset, err
 	} else {
@@ -1167,13 +1425,13 @@ func (p *SDASQueryPipelineResult) FastReadField0(buf []byte) (int, error) {
 }
 
 // for compatibility
-func (p *SDASQueryPipelineResult) FastWrite(buf []byte) int {
+func (p *SDASListPipelineResult) FastWrite(buf []byte) int {
 	return 0
 }
 
-func (p *SDASQueryPipelineResult) FastWriteNocopy(buf []byte, binaryWriter bthrift.BinaryWriter) int {
+func (p *SDASListPipelineResult) FastWriteNocopy(buf []byte, binaryWriter bthrift.BinaryWriter) int {
 	offset := 0
-	offset += bthrift.Binary.WriteStructBegin(buf[offset:], "QueryPipeline_result")
+	offset += bthrift.Binary.WriteStructBegin(buf[offset:], "ListPipeline_result")
 	if p != nil {
 		offset += p.fastWriteField0(buf[offset:], binaryWriter)
 	}
@@ -1182,9 +1440,9 @@ func (p *SDASQueryPipelineResult) FastWriteNocopy(buf []byte, binaryWriter bthri
 	return offset
 }
 
-func (p *SDASQueryPipelineResult) BLength() int {
+func (p *SDASListPipelineResult) BLength() int {
 	l := 0
-	l += bthrift.Binary.StructBeginLength("QueryPipeline_result")
+	l += bthrift.Binary.StructBeginLength("ListPipeline_result")
 	if p != nil {
 		l += p.field0Length()
 	}
@@ -1193,7 +1451,7 @@ func (p *SDASQueryPipelineResult) BLength() int {
 	return l
 }
 
-func (p *SDASQueryPipelineResult) fastWriteField0(buf []byte, binaryWriter bthrift.BinaryWriter) int {
+func (p *SDASListPipelineResult) fastWriteField0(buf []byte, binaryWriter bthrift.BinaryWriter) int {
 	offset := 0
 	if p.IsSetSuccess() {
 		offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "success", thrift.STRUCT, 0)
@@ -1203,7 +1461,7 @@ func (p *SDASQueryPipelineResult) fastWriteField0(buf []byte, binaryWriter bthri
 	return offset
 }
 
-func (p *SDASQueryPipelineResult) field0Length() int {
+func (p *SDASListPipelineResult) field0Length() int {
 	l := 0
 	if p.IsSetSuccess() {
 		l += bthrift.Binary.FieldBeginLength("success", thrift.STRUCT, 0)
@@ -1961,19 +2219,27 @@ func (p *SDASListSourcesResult) GetResult() interface{} {
 	return p.Success
 }
 
-func (p *SDASSetPipelineArgs) GetFirstArgument() interface{} {
+func (p *SDASAddPipelineArgs) GetFirstArgument() interface{} {
 	return p.Req
 }
 
-func (p *SDASSetPipelineResult) GetResult() interface{} {
+func (p *SDASAddPipelineResult) GetResult() interface{} {
 	return p.Success
 }
 
-func (p *SDASQueryPipelineArgs) GetFirstArgument() interface{} {
+func (p *SDASRemovePipelineArgs) GetFirstArgument() interface{} {
+	return p.Req
+}
+
+func (p *SDASRemovePipelineResult) GetResult() interface{} {
+	return p.Success
+}
+
+func (p *SDASListPipelineArgs) GetFirstArgument() interface{} {
 	return nil
 }
 
-func (p *SDASQueryPipelineResult) GetResult() interface{} {
+func (p *SDASListPipelineResult) GetResult() interface{} {
 	return p.Success
 }
 

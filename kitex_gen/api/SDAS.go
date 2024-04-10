@@ -15,9 +15,11 @@ type SDAS interface {
 
 	ListSources(ctx context.Context) (r *ListSourcesResponse, err error)
 
-	SetPipeline(ctx context.Context, req *SetPipelineRequest) (r *SetPipelineResponse, err error)
+	AddPipeline(ctx context.Context, req *AddPipelineRequest) (r *AddPipelineResponse, err error)
 
-	QueryPipeline(ctx context.Context) (r *QueryPipelineResponse, err error)
+	RemovePipeline(ctx context.Context, req *RemovePipelineRequest) (r *RemovePipelineResponse, err error)
+
+	ListPipeline(ctx context.Context) (r *ListPipelinesResponse, err error)
 
 	AddExpose(ctx context.Context, req *AddExposeRequest) (r *AddExposeResponse, err error)
 
@@ -78,19 +80,28 @@ func (p *SDASClient) ListSources(ctx context.Context) (r *ListSourcesResponse, e
 	}
 	return _result.GetSuccess(), nil
 }
-func (p *SDASClient) SetPipeline(ctx context.Context, req *SetPipelineRequest) (r *SetPipelineResponse, err error) {
-	var _args SDASSetPipelineArgs
+func (p *SDASClient) AddPipeline(ctx context.Context, req *AddPipelineRequest) (r *AddPipelineResponse, err error) {
+	var _args SDASAddPipelineArgs
 	_args.Req = req
-	var _result SDASSetPipelineResult
-	if err = p.Client_().Call(ctx, "SetPipeline", &_args, &_result); err != nil {
+	var _result SDASAddPipelineResult
+	if err = p.Client_().Call(ctx, "AddPipeline", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil
 }
-func (p *SDASClient) QueryPipeline(ctx context.Context) (r *QueryPipelineResponse, err error) {
-	var _args SDASQueryPipelineArgs
-	var _result SDASQueryPipelineResult
-	if err = p.Client_().Call(ctx, "QueryPipeline", &_args, &_result); err != nil {
+func (p *SDASClient) RemovePipeline(ctx context.Context, req *RemovePipelineRequest) (r *RemovePipelineResponse, err error) {
+	var _args SDASRemovePipelineArgs
+	_args.Req = req
+	var _result SDASRemovePipelineResult
+	if err = p.Client_().Call(ctx, "RemovePipeline", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+func (p *SDASClient) ListPipeline(ctx context.Context) (r *ListPipelinesResponse, err error) {
+	var _args SDASListPipelineArgs
+	var _result SDASListPipelineResult
+	if err = p.Client_().Call(ctx, "ListPipeline", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil
@@ -145,8 +156,9 @@ func NewSDASProcessor(handler SDAS) *SDASProcessor {
 	self.AddToProcessorMap("AddSource", &sDASProcessorAddSource{handler: handler})
 	self.AddToProcessorMap("RemoveSource", &sDASProcessorRemoveSource{handler: handler})
 	self.AddToProcessorMap("ListSources", &sDASProcessorListSources{handler: handler})
-	self.AddToProcessorMap("SetPipeline", &sDASProcessorSetPipeline{handler: handler})
-	self.AddToProcessorMap("QueryPipeline", &sDASProcessorQueryPipeline{handler: handler})
+	self.AddToProcessorMap("AddPipeline", &sDASProcessorAddPipeline{handler: handler})
+	self.AddToProcessorMap("RemovePipeline", &sDASProcessorRemovePipeline{handler: handler})
+	self.AddToProcessorMap("ListPipeline", &sDASProcessorListPipeline{handler: handler})
 	self.AddToProcessorMap("AddExpose", &sDASProcessorAddExpose{handler: handler})
 	self.AddToProcessorMap("RemoveExpose", &sDASProcessorRemoveExpose{handler: handler})
 	self.AddToProcessorMap("ListExposes", &sDASProcessorListExposes{handler: handler})
@@ -314,16 +326,16 @@ func (p *sDASProcessorListSources) Process(ctx context.Context, seqId int32, ipr
 	return true, err
 }
 
-type sDASProcessorSetPipeline struct {
+type sDASProcessorAddPipeline struct {
 	handler SDAS
 }
 
-func (p *sDASProcessorSetPipeline) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
-	args := SDASSetPipelineArgs{}
+func (p *sDASProcessorAddPipeline) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
+	args := SDASAddPipelineArgs{}
 	if err = args.Read(iprot); err != nil {
 		iprot.ReadMessageEnd()
 		x := thrift.NewTApplicationException(thrift.PROTOCOL_ERROR, err.Error())
-		oprot.WriteMessageBegin("SetPipeline", thrift.EXCEPTION, seqId)
+		oprot.WriteMessageBegin("AddPipeline", thrift.EXCEPTION, seqId)
 		x.Write(oprot)
 		oprot.WriteMessageEnd()
 		oprot.Flush(ctx)
@@ -332,11 +344,11 @@ func (p *sDASProcessorSetPipeline) Process(ctx context.Context, seqId int32, ipr
 
 	iprot.ReadMessageEnd()
 	var err2 error
-	result := SDASSetPipelineResult{}
-	var retval *SetPipelineResponse
-	if retval, err2 = p.handler.SetPipeline(ctx, args.Req); err2 != nil {
-		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing SetPipeline: "+err2.Error())
-		oprot.WriteMessageBegin("SetPipeline", thrift.EXCEPTION, seqId)
+	result := SDASAddPipelineResult{}
+	var retval *AddPipelineResponse
+	if retval, err2 = p.handler.AddPipeline(ctx, args.Req); err2 != nil {
+		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing AddPipeline: "+err2.Error())
+		oprot.WriteMessageBegin("AddPipeline", thrift.EXCEPTION, seqId)
 		x.Write(oprot)
 		oprot.WriteMessageEnd()
 		oprot.Flush(ctx)
@@ -344,7 +356,7 @@ func (p *sDASProcessorSetPipeline) Process(ctx context.Context, seqId int32, ipr
 	} else {
 		result.Success = retval
 	}
-	if err2 = oprot.WriteMessageBegin("SetPipeline", thrift.REPLY, seqId); err2 != nil {
+	if err2 = oprot.WriteMessageBegin("AddPipeline", thrift.REPLY, seqId); err2 != nil {
 		err = err2
 	}
 	if err2 = result.Write(oprot); err == nil && err2 != nil {
@@ -362,16 +374,16 @@ func (p *sDASProcessorSetPipeline) Process(ctx context.Context, seqId int32, ipr
 	return true, err
 }
 
-type sDASProcessorQueryPipeline struct {
+type sDASProcessorRemovePipeline struct {
 	handler SDAS
 }
 
-func (p *sDASProcessorQueryPipeline) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
-	args := SDASQueryPipelineArgs{}
+func (p *sDASProcessorRemovePipeline) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
+	args := SDASRemovePipelineArgs{}
 	if err = args.Read(iprot); err != nil {
 		iprot.ReadMessageEnd()
 		x := thrift.NewTApplicationException(thrift.PROTOCOL_ERROR, err.Error())
-		oprot.WriteMessageBegin("QueryPipeline", thrift.EXCEPTION, seqId)
+		oprot.WriteMessageBegin("RemovePipeline", thrift.EXCEPTION, seqId)
 		x.Write(oprot)
 		oprot.WriteMessageEnd()
 		oprot.Flush(ctx)
@@ -380,11 +392,11 @@ func (p *sDASProcessorQueryPipeline) Process(ctx context.Context, seqId int32, i
 
 	iprot.ReadMessageEnd()
 	var err2 error
-	result := SDASQueryPipelineResult{}
-	var retval *QueryPipelineResponse
-	if retval, err2 = p.handler.QueryPipeline(ctx); err2 != nil {
-		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing QueryPipeline: "+err2.Error())
-		oprot.WriteMessageBegin("QueryPipeline", thrift.EXCEPTION, seqId)
+	result := SDASRemovePipelineResult{}
+	var retval *RemovePipelineResponse
+	if retval, err2 = p.handler.RemovePipeline(ctx, args.Req); err2 != nil {
+		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing RemovePipeline: "+err2.Error())
+		oprot.WriteMessageBegin("RemovePipeline", thrift.EXCEPTION, seqId)
 		x.Write(oprot)
 		oprot.WriteMessageEnd()
 		oprot.Flush(ctx)
@@ -392,7 +404,55 @@ func (p *sDASProcessorQueryPipeline) Process(ctx context.Context, seqId int32, i
 	} else {
 		result.Success = retval
 	}
-	if err2 = oprot.WriteMessageBegin("QueryPipeline", thrift.REPLY, seqId); err2 != nil {
+	if err2 = oprot.WriteMessageBegin("RemovePipeline", thrift.REPLY, seqId); err2 != nil {
+		err = err2
+	}
+	if err2 = result.Write(oprot); err == nil && err2 != nil {
+		err = err2
+	}
+	if err2 = oprot.WriteMessageEnd(); err == nil && err2 != nil {
+		err = err2
+	}
+	if err2 = oprot.Flush(ctx); err == nil && err2 != nil {
+		err = err2
+	}
+	if err != nil {
+		return
+	}
+	return true, err
+}
+
+type sDASProcessorListPipeline struct {
+	handler SDAS
+}
+
+func (p *sDASProcessorListPipeline) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
+	args := SDASListPipelineArgs{}
+	if err = args.Read(iprot); err != nil {
+		iprot.ReadMessageEnd()
+		x := thrift.NewTApplicationException(thrift.PROTOCOL_ERROR, err.Error())
+		oprot.WriteMessageBegin("ListPipeline", thrift.EXCEPTION, seqId)
+		x.Write(oprot)
+		oprot.WriteMessageEnd()
+		oprot.Flush(ctx)
+		return false, err
+	}
+
+	iprot.ReadMessageEnd()
+	var err2 error
+	result := SDASListPipelineResult{}
+	var retval *ListPipelinesResponse
+	if retval, err2 = p.handler.ListPipeline(ctx); err2 != nil {
+		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing ListPipeline: "+err2.Error())
+		oprot.WriteMessageBegin("ListPipeline", thrift.EXCEPTION, seqId)
+		x.Write(oprot)
+		oprot.WriteMessageEnd()
+		oprot.Flush(ctx)
+		return true, err2
+	} else {
+		result.Success = retval
+	}
+	if err2 = oprot.WriteMessageBegin("ListPipeline", thrift.REPLY, seqId); err2 != nil {
 		err = err2
 	}
 	if err2 = result.Write(oprot); err == nil && err2 != nil {
@@ -1498,39 +1558,39 @@ func (p *SDASListSourcesResult) Field0DeepEqual(src *ListSourcesResponse) bool {
 	return true
 }
 
-type SDASSetPipelineArgs struct {
-	Req *SetPipelineRequest `thrift:"req,1" frugal:"1,default,SetPipelineRequest" json:"req"`
+type SDASAddPipelineArgs struct {
+	Req *AddPipelineRequest `thrift:"req,1" frugal:"1,default,AddPipelineRequest" json:"req"`
 }
 
-func NewSDASSetPipelineArgs() *SDASSetPipelineArgs {
-	return &SDASSetPipelineArgs{}
+func NewSDASAddPipelineArgs() *SDASAddPipelineArgs {
+	return &SDASAddPipelineArgs{}
 }
 
-func (p *SDASSetPipelineArgs) InitDefault() {
-	*p = SDASSetPipelineArgs{}
+func (p *SDASAddPipelineArgs) InitDefault() {
+	*p = SDASAddPipelineArgs{}
 }
 
-var SDASSetPipelineArgs_Req_DEFAULT *SetPipelineRequest
+var SDASAddPipelineArgs_Req_DEFAULT *AddPipelineRequest
 
-func (p *SDASSetPipelineArgs) GetReq() (v *SetPipelineRequest) {
+func (p *SDASAddPipelineArgs) GetReq() (v *AddPipelineRequest) {
 	if !p.IsSetReq() {
-		return SDASSetPipelineArgs_Req_DEFAULT
+		return SDASAddPipelineArgs_Req_DEFAULT
 	}
 	return p.Req
 }
-func (p *SDASSetPipelineArgs) SetReq(val *SetPipelineRequest) {
+func (p *SDASAddPipelineArgs) SetReq(val *AddPipelineRequest) {
 	p.Req = val
 }
 
-var fieldIDToName_SDASSetPipelineArgs = map[int16]string{
+var fieldIDToName_SDASAddPipelineArgs = map[int16]string{
 	1: "req",
 }
 
-func (p *SDASSetPipelineArgs) IsSetReq() bool {
+func (p *SDASAddPipelineArgs) IsSetReq() bool {
 	return p.Req != nil
 }
 
-func (p *SDASSetPipelineArgs) Read(iprot thrift.TProtocol) (err error) {
+func (p *SDASAddPipelineArgs) Read(iprot thrift.TProtocol) (err error) {
 
 	var fieldTypeId thrift.TType
 	var fieldId int16
@@ -1576,7 +1636,7 @@ ReadStructBeginError:
 ReadFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
 ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_SDASSetPipelineArgs[fieldId]), err)
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_SDASAddPipelineArgs[fieldId]), err)
 SkipFieldError:
 	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
 
@@ -1586,17 +1646,17 @@ ReadStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
-func (p *SDASSetPipelineArgs) ReadField1(iprot thrift.TProtocol) error {
-	p.Req = NewSetPipelineRequest()
+func (p *SDASAddPipelineArgs) ReadField1(iprot thrift.TProtocol) error {
+	p.Req = NewAddPipelineRequest()
 	if err := p.Req.Read(iprot); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (p *SDASSetPipelineArgs) Write(oprot thrift.TProtocol) (err error) {
+func (p *SDASAddPipelineArgs) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
-	if err = oprot.WriteStructBegin("SetPipeline_args"); err != nil {
+	if err = oprot.WriteStructBegin("AddPipeline_args"); err != nil {
 		goto WriteStructBeginError
 	}
 	if p != nil {
@@ -1622,7 +1682,7 @@ WriteStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
 }
 
-func (p *SDASSetPipelineArgs) writeField1(oprot thrift.TProtocol) (err error) {
+func (p *SDASAddPipelineArgs) writeField1(oprot thrift.TProtocol) (err error) {
 	if err = oprot.WriteFieldBegin("req", thrift.STRUCT, 1); err != nil {
 		goto WriteFieldBeginError
 	}
@@ -1639,15 +1699,15 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
 }
 
-func (p *SDASSetPipelineArgs) String() string {
+func (p *SDASAddPipelineArgs) String() string {
 	if p == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("SDASSetPipelineArgs(%+v)", *p)
+	return fmt.Sprintf("SDASAddPipelineArgs(%+v)", *p)
 
 }
 
-func (p *SDASSetPipelineArgs) DeepEqual(ano *SDASSetPipelineArgs) bool {
+func (p *SDASAddPipelineArgs) DeepEqual(ano *SDASAddPipelineArgs) bool {
 	if p == ano {
 		return true
 	} else if p == nil || ano == nil {
@@ -1659,7 +1719,7 @@ func (p *SDASSetPipelineArgs) DeepEqual(ano *SDASSetPipelineArgs) bool {
 	return true
 }
 
-func (p *SDASSetPipelineArgs) Field1DeepEqual(src *SetPipelineRequest) bool {
+func (p *SDASAddPipelineArgs) Field1DeepEqual(src *AddPipelineRequest) bool {
 
 	if !p.Req.DeepEqual(src) {
 		return false
@@ -1667,39 +1727,39 @@ func (p *SDASSetPipelineArgs) Field1DeepEqual(src *SetPipelineRequest) bool {
 	return true
 }
 
-type SDASSetPipelineResult struct {
-	Success *SetPipelineResponse `thrift:"success,0,optional" frugal:"0,optional,SetPipelineResponse" json:"success,omitempty"`
+type SDASAddPipelineResult struct {
+	Success *AddPipelineResponse `thrift:"success,0,optional" frugal:"0,optional,AddPipelineResponse" json:"success,omitempty"`
 }
 
-func NewSDASSetPipelineResult() *SDASSetPipelineResult {
-	return &SDASSetPipelineResult{}
+func NewSDASAddPipelineResult() *SDASAddPipelineResult {
+	return &SDASAddPipelineResult{}
 }
 
-func (p *SDASSetPipelineResult) InitDefault() {
-	*p = SDASSetPipelineResult{}
+func (p *SDASAddPipelineResult) InitDefault() {
+	*p = SDASAddPipelineResult{}
 }
 
-var SDASSetPipelineResult_Success_DEFAULT *SetPipelineResponse
+var SDASAddPipelineResult_Success_DEFAULT *AddPipelineResponse
 
-func (p *SDASSetPipelineResult) GetSuccess() (v *SetPipelineResponse) {
+func (p *SDASAddPipelineResult) GetSuccess() (v *AddPipelineResponse) {
 	if !p.IsSetSuccess() {
-		return SDASSetPipelineResult_Success_DEFAULT
+		return SDASAddPipelineResult_Success_DEFAULT
 	}
 	return p.Success
 }
-func (p *SDASSetPipelineResult) SetSuccess(x interface{}) {
-	p.Success = x.(*SetPipelineResponse)
+func (p *SDASAddPipelineResult) SetSuccess(x interface{}) {
+	p.Success = x.(*AddPipelineResponse)
 }
 
-var fieldIDToName_SDASSetPipelineResult = map[int16]string{
+var fieldIDToName_SDASAddPipelineResult = map[int16]string{
 	0: "success",
 }
 
-func (p *SDASSetPipelineResult) IsSetSuccess() bool {
+func (p *SDASAddPipelineResult) IsSetSuccess() bool {
 	return p.Success != nil
 }
 
-func (p *SDASSetPipelineResult) Read(iprot thrift.TProtocol) (err error) {
+func (p *SDASAddPipelineResult) Read(iprot thrift.TProtocol) (err error) {
 
 	var fieldTypeId thrift.TType
 	var fieldId int16
@@ -1745,7 +1805,7 @@ ReadStructBeginError:
 ReadFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
 ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_SDASSetPipelineResult[fieldId]), err)
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_SDASAddPipelineResult[fieldId]), err)
 SkipFieldError:
 	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
 
@@ -1755,17 +1815,17 @@ ReadStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
-func (p *SDASSetPipelineResult) ReadField0(iprot thrift.TProtocol) error {
-	p.Success = NewSetPipelineResponse()
+func (p *SDASAddPipelineResult) ReadField0(iprot thrift.TProtocol) error {
+	p.Success = NewAddPipelineResponse()
 	if err := p.Success.Read(iprot); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (p *SDASSetPipelineResult) Write(oprot thrift.TProtocol) (err error) {
+func (p *SDASAddPipelineResult) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
-	if err = oprot.WriteStructBegin("SetPipeline_result"); err != nil {
+	if err = oprot.WriteStructBegin("AddPipeline_result"); err != nil {
 		goto WriteStructBeginError
 	}
 	if p != nil {
@@ -1791,7 +1851,7 @@ WriteStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
 }
 
-func (p *SDASSetPipelineResult) writeField0(oprot thrift.TProtocol) (err error) {
+func (p *SDASAddPipelineResult) writeField0(oprot thrift.TProtocol) (err error) {
 	if p.IsSetSuccess() {
 		if err = oprot.WriteFieldBegin("success", thrift.STRUCT, 0); err != nil {
 			goto WriteFieldBeginError
@@ -1810,15 +1870,15 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 0 end error: ", p), err)
 }
 
-func (p *SDASSetPipelineResult) String() string {
+func (p *SDASAddPipelineResult) String() string {
 	if p == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("SDASSetPipelineResult(%+v)", *p)
+	return fmt.Sprintf("SDASAddPipelineResult(%+v)", *p)
 
 }
 
-func (p *SDASSetPipelineResult) DeepEqual(ano *SDASSetPipelineResult) bool {
+func (p *SDASAddPipelineResult) DeepEqual(ano *SDASAddPipelineResult) bool {
 	if p == ano {
 		return true
 	} else if p == nil || ano == nil {
@@ -1830,7 +1890,7 @@ func (p *SDASSetPipelineResult) DeepEqual(ano *SDASSetPipelineResult) bool {
 	return true
 }
 
-func (p *SDASSetPipelineResult) Field0DeepEqual(src *SetPipelineResponse) bool {
+func (p *SDASAddPipelineResult) Field0DeepEqual(src *AddPipelineResponse) bool {
 
 	if !p.Success.DeepEqual(src) {
 		return false
@@ -1838,20 +1898,360 @@ func (p *SDASSetPipelineResult) Field0DeepEqual(src *SetPipelineResponse) bool {
 	return true
 }
 
-type SDASQueryPipelineArgs struct {
+type SDASRemovePipelineArgs struct {
+	Req *RemovePipelineRequest `thrift:"req,1" frugal:"1,default,RemovePipelineRequest" json:"req"`
 }
 
-func NewSDASQueryPipelineArgs() *SDASQueryPipelineArgs {
-	return &SDASQueryPipelineArgs{}
+func NewSDASRemovePipelineArgs() *SDASRemovePipelineArgs {
+	return &SDASRemovePipelineArgs{}
 }
 
-func (p *SDASQueryPipelineArgs) InitDefault() {
-	*p = SDASQueryPipelineArgs{}
+func (p *SDASRemovePipelineArgs) InitDefault() {
+	*p = SDASRemovePipelineArgs{}
 }
 
-var fieldIDToName_SDASQueryPipelineArgs = map[int16]string{}
+var SDASRemovePipelineArgs_Req_DEFAULT *RemovePipelineRequest
 
-func (p *SDASQueryPipelineArgs) Read(iprot thrift.TProtocol) (err error) {
+func (p *SDASRemovePipelineArgs) GetReq() (v *RemovePipelineRequest) {
+	if !p.IsSetReq() {
+		return SDASRemovePipelineArgs_Req_DEFAULT
+	}
+	return p.Req
+}
+func (p *SDASRemovePipelineArgs) SetReq(val *RemovePipelineRequest) {
+	p.Req = val
+}
+
+var fieldIDToName_SDASRemovePipelineArgs = map[int16]string{
+	1: "req",
+}
+
+func (p *SDASRemovePipelineArgs) IsSetReq() bool {
+	return p.Req != nil
+}
+
+func (p *SDASRemovePipelineArgs) Read(iprot thrift.TProtocol) (err error) {
+
+	var fieldTypeId thrift.TType
+	var fieldId int16
+
+	if _, err = iprot.ReadStructBegin(); err != nil {
+		goto ReadStructBeginError
+	}
+
+	for {
+		_, fieldTypeId, fieldId, err = iprot.ReadFieldBegin()
+		if err != nil {
+			goto ReadFieldBeginError
+		}
+		if fieldTypeId == thrift.STOP {
+			break
+		}
+
+		switch fieldId {
+		case 1:
+			if fieldTypeId == thrift.STRUCT {
+				if err = p.ReadField1(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		default:
+			if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		}
+		if err = iprot.ReadFieldEnd(); err != nil {
+			goto ReadFieldEndError
+		}
+	}
+	if err = iprot.ReadStructEnd(); err != nil {
+		goto ReadStructEndError
+	}
+
+	return nil
+ReadStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
+ReadFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
+ReadFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_SDASRemovePipelineArgs[fieldId]), err)
+SkipFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
+
+ReadFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
+ReadStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+}
+
+func (p *SDASRemovePipelineArgs) ReadField1(iprot thrift.TProtocol) error {
+	p.Req = NewRemovePipelineRequest()
+	if err := p.Req.Read(iprot); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (p *SDASRemovePipelineArgs) Write(oprot thrift.TProtocol) (err error) {
+	var fieldId int16
+	if err = oprot.WriteStructBegin("RemovePipeline_args"); err != nil {
+		goto WriteStructBeginError
+	}
+	if p != nil {
+		if err = p.writeField1(oprot); err != nil {
+			fieldId = 1
+			goto WriteFieldError
+		}
+	}
+	if err = oprot.WriteFieldStop(); err != nil {
+		goto WriteFieldStopError
+	}
+	if err = oprot.WriteStructEnd(); err != nil {
+		goto WriteStructEndError
+	}
+	return nil
+WriteStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err)
+WriteFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T write field %d error: ", p, fieldId), err)
+WriteFieldStopError:
+	return thrift.PrependError(fmt.Sprintf("%T write field stop error: ", p), err)
+WriteStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
+}
+
+func (p *SDASRemovePipelineArgs) writeField1(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("req", thrift.STRUCT, 1); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := p.Req.Write(oprot); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
+}
+
+func (p *SDASRemovePipelineArgs) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("SDASRemovePipelineArgs(%+v)", *p)
+
+}
+
+func (p *SDASRemovePipelineArgs) DeepEqual(ano *SDASRemovePipelineArgs) bool {
+	if p == ano {
+		return true
+	} else if p == nil || ano == nil {
+		return false
+	}
+	if !p.Field1DeepEqual(ano.Req) {
+		return false
+	}
+	return true
+}
+
+func (p *SDASRemovePipelineArgs) Field1DeepEqual(src *RemovePipelineRequest) bool {
+
+	if !p.Req.DeepEqual(src) {
+		return false
+	}
+	return true
+}
+
+type SDASRemovePipelineResult struct {
+	Success *RemovePipelineResponse `thrift:"success,0,optional" frugal:"0,optional,RemovePipelineResponse" json:"success,omitempty"`
+}
+
+func NewSDASRemovePipelineResult() *SDASRemovePipelineResult {
+	return &SDASRemovePipelineResult{}
+}
+
+func (p *SDASRemovePipelineResult) InitDefault() {
+	*p = SDASRemovePipelineResult{}
+}
+
+var SDASRemovePipelineResult_Success_DEFAULT *RemovePipelineResponse
+
+func (p *SDASRemovePipelineResult) GetSuccess() (v *RemovePipelineResponse) {
+	if !p.IsSetSuccess() {
+		return SDASRemovePipelineResult_Success_DEFAULT
+	}
+	return p.Success
+}
+func (p *SDASRemovePipelineResult) SetSuccess(x interface{}) {
+	p.Success = x.(*RemovePipelineResponse)
+}
+
+var fieldIDToName_SDASRemovePipelineResult = map[int16]string{
+	0: "success",
+}
+
+func (p *SDASRemovePipelineResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
+func (p *SDASRemovePipelineResult) Read(iprot thrift.TProtocol) (err error) {
+
+	var fieldTypeId thrift.TType
+	var fieldId int16
+
+	if _, err = iprot.ReadStructBegin(); err != nil {
+		goto ReadStructBeginError
+	}
+
+	for {
+		_, fieldTypeId, fieldId, err = iprot.ReadFieldBegin()
+		if err != nil {
+			goto ReadFieldBeginError
+		}
+		if fieldTypeId == thrift.STOP {
+			break
+		}
+
+		switch fieldId {
+		case 0:
+			if fieldTypeId == thrift.STRUCT {
+				if err = p.ReadField0(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		default:
+			if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		}
+		if err = iprot.ReadFieldEnd(); err != nil {
+			goto ReadFieldEndError
+		}
+	}
+	if err = iprot.ReadStructEnd(); err != nil {
+		goto ReadStructEndError
+	}
+
+	return nil
+ReadStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
+ReadFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
+ReadFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_SDASRemovePipelineResult[fieldId]), err)
+SkipFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
+
+ReadFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
+ReadStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+}
+
+func (p *SDASRemovePipelineResult) ReadField0(iprot thrift.TProtocol) error {
+	p.Success = NewRemovePipelineResponse()
+	if err := p.Success.Read(iprot); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (p *SDASRemovePipelineResult) Write(oprot thrift.TProtocol) (err error) {
+	var fieldId int16
+	if err = oprot.WriteStructBegin("RemovePipeline_result"); err != nil {
+		goto WriteStructBeginError
+	}
+	if p != nil {
+		if err = p.writeField0(oprot); err != nil {
+			fieldId = 0
+			goto WriteFieldError
+		}
+	}
+	if err = oprot.WriteFieldStop(); err != nil {
+		goto WriteFieldStopError
+	}
+	if err = oprot.WriteStructEnd(); err != nil {
+		goto WriteStructEndError
+	}
+	return nil
+WriteStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err)
+WriteFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T write field %d error: ", p, fieldId), err)
+WriteFieldStopError:
+	return thrift.PrependError(fmt.Sprintf("%T write field stop error: ", p), err)
+WriteStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
+}
+
+func (p *SDASRemovePipelineResult) writeField0(oprot thrift.TProtocol) (err error) {
+	if p.IsSetSuccess() {
+		if err = oprot.WriteFieldBegin("success", thrift.STRUCT, 0); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := p.Success.Write(oprot); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 0 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 0 end error: ", p), err)
+}
+
+func (p *SDASRemovePipelineResult) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("SDASRemovePipelineResult(%+v)", *p)
+
+}
+
+func (p *SDASRemovePipelineResult) DeepEqual(ano *SDASRemovePipelineResult) bool {
+	if p == ano {
+		return true
+	} else if p == nil || ano == nil {
+		return false
+	}
+	if !p.Field0DeepEqual(ano.Success) {
+		return false
+	}
+	return true
+}
+
+func (p *SDASRemovePipelineResult) Field0DeepEqual(src *RemovePipelineResponse) bool {
+
+	if !p.Success.DeepEqual(src) {
+		return false
+	}
+	return true
+}
+
+type SDASListPipelineArgs struct {
+}
+
+func NewSDASListPipelineArgs() *SDASListPipelineArgs {
+	return &SDASListPipelineArgs{}
+}
+
+func (p *SDASListPipelineArgs) InitDefault() {
+	*p = SDASListPipelineArgs{}
+}
+
+var fieldIDToName_SDASListPipelineArgs = map[int16]string{}
+
+func (p *SDASListPipelineArgs) Read(iprot thrift.TProtocol) (err error) {
 
 	var fieldTypeId thrift.TType
 	var fieldId int16
@@ -1893,8 +2293,8 @@ ReadStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
-func (p *SDASQueryPipelineArgs) Write(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteStructBegin("QueryPipeline_args"); err != nil {
+func (p *SDASListPipelineArgs) Write(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteStructBegin("ListPipeline_args"); err != nil {
 		goto WriteStructBeginError
 	}
 	if p != nil {
@@ -1914,15 +2314,15 @@ WriteStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
 }
 
-func (p *SDASQueryPipelineArgs) String() string {
+func (p *SDASListPipelineArgs) String() string {
 	if p == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("SDASQueryPipelineArgs(%+v)", *p)
+	return fmt.Sprintf("SDASListPipelineArgs(%+v)", *p)
 
 }
 
-func (p *SDASQueryPipelineArgs) DeepEqual(ano *SDASQueryPipelineArgs) bool {
+func (p *SDASListPipelineArgs) DeepEqual(ano *SDASListPipelineArgs) bool {
 	if p == ano {
 		return true
 	} else if p == nil || ano == nil {
@@ -1931,39 +2331,39 @@ func (p *SDASQueryPipelineArgs) DeepEqual(ano *SDASQueryPipelineArgs) bool {
 	return true
 }
 
-type SDASQueryPipelineResult struct {
-	Success *QueryPipelineResponse `thrift:"success,0,optional" frugal:"0,optional,QueryPipelineResponse" json:"success,omitempty"`
+type SDASListPipelineResult struct {
+	Success *ListPipelinesResponse `thrift:"success,0,optional" frugal:"0,optional,ListPipelinesResponse" json:"success,omitempty"`
 }
 
-func NewSDASQueryPipelineResult() *SDASQueryPipelineResult {
-	return &SDASQueryPipelineResult{}
+func NewSDASListPipelineResult() *SDASListPipelineResult {
+	return &SDASListPipelineResult{}
 }
 
-func (p *SDASQueryPipelineResult) InitDefault() {
-	*p = SDASQueryPipelineResult{}
+func (p *SDASListPipelineResult) InitDefault() {
+	*p = SDASListPipelineResult{}
 }
 
-var SDASQueryPipelineResult_Success_DEFAULT *QueryPipelineResponse
+var SDASListPipelineResult_Success_DEFAULT *ListPipelinesResponse
 
-func (p *SDASQueryPipelineResult) GetSuccess() (v *QueryPipelineResponse) {
+func (p *SDASListPipelineResult) GetSuccess() (v *ListPipelinesResponse) {
 	if !p.IsSetSuccess() {
-		return SDASQueryPipelineResult_Success_DEFAULT
+		return SDASListPipelineResult_Success_DEFAULT
 	}
 	return p.Success
 }
-func (p *SDASQueryPipelineResult) SetSuccess(x interface{}) {
-	p.Success = x.(*QueryPipelineResponse)
+func (p *SDASListPipelineResult) SetSuccess(x interface{}) {
+	p.Success = x.(*ListPipelinesResponse)
 }
 
-var fieldIDToName_SDASQueryPipelineResult = map[int16]string{
+var fieldIDToName_SDASListPipelineResult = map[int16]string{
 	0: "success",
 }
 
-func (p *SDASQueryPipelineResult) IsSetSuccess() bool {
+func (p *SDASListPipelineResult) IsSetSuccess() bool {
 	return p.Success != nil
 }
 
-func (p *SDASQueryPipelineResult) Read(iprot thrift.TProtocol) (err error) {
+func (p *SDASListPipelineResult) Read(iprot thrift.TProtocol) (err error) {
 
 	var fieldTypeId thrift.TType
 	var fieldId int16
@@ -2009,7 +2409,7 @@ ReadStructBeginError:
 ReadFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
 ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_SDASQueryPipelineResult[fieldId]), err)
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_SDASListPipelineResult[fieldId]), err)
 SkipFieldError:
 	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
 
@@ -2019,17 +2419,17 @@ ReadStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
 }
 
-func (p *SDASQueryPipelineResult) ReadField0(iprot thrift.TProtocol) error {
-	p.Success = NewQueryPipelineResponse()
+func (p *SDASListPipelineResult) ReadField0(iprot thrift.TProtocol) error {
+	p.Success = NewListPipelinesResponse()
 	if err := p.Success.Read(iprot); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (p *SDASQueryPipelineResult) Write(oprot thrift.TProtocol) (err error) {
+func (p *SDASListPipelineResult) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
-	if err = oprot.WriteStructBegin("QueryPipeline_result"); err != nil {
+	if err = oprot.WriteStructBegin("ListPipeline_result"); err != nil {
 		goto WriteStructBeginError
 	}
 	if p != nil {
@@ -2055,7 +2455,7 @@ WriteStructEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
 }
 
-func (p *SDASQueryPipelineResult) writeField0(oprot thrift.TProtocol) (err error) {
+func (p *SDASListPipelineResult) writeField0(oprot thrift.TProtocol) (err error) {
 	if p.IsSetSuccess() {
 		if err = oprot.WriteFieldBegin("success", thrift.STRUCT, 0); err != nil {
 			goto WriteFieldBeginError
@@ -2074,15 +2474,15 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 0 end error: ", p), err)
 }
 
-func (p *SDASQueryPipelineResult) String() string {
+func (p *SDASListPipelineResult) String() string {
 	if p == nil {
 		return "<nil>"
 	}
-	return fmt.Sprintf("SDASQueryPipelineResult(%+v)", *p)
+	return fmt.Sprintf("SDASListPipelineResult(%+v)", *p)
 
 }
 
-func (p *SDASQueryPipelineResult) DeepEqual(ano *SDASQueryPipelineResult) bool {
+func (p *SDASListPipelineResult) DeepEqual(ano *SDASListPipelineResult) bool {
 	if p == ano {
 		return true
 	} else if p == nil || ano == nil {
@@ -2094,7 +2494,7 @@ func (p *SDASQueryPipelineResult) DeepEqual(ano *SDASQueryPipelineResult) bool {
 	return true
 }
 
-func (p *SDASQueryPipelineResult) Field0DeepEqual(src *QueryPipelineResponse) bool {
+func (p *SDASListPipelineResult) Field0DeepEqual(src *ListPipelinesResponse) bool {
 
 	if !p.Success.DeepEqual(src) {
 		return false

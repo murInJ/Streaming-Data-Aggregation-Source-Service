@@ -10,17 +10,19 @@ import (
 )
 
 type Config struct {
-	Sources []SOURCE `json:"sources"`
-	Exposes []EXPOSE `json:"exposes"`
-	Server  SERVER   `json:"server"`
+	Sources   []SOURCE   `json:"sources"`
+	Exposes   []EXPOSE   `json:"exposes"`
+	Pipelines []PIPELINE `json:"pipelines"`
+	Server    SERVER     `json:"server"`
 }
 
 var Conf *Config
 
 func NewDefaultConfig() {
 	Conf = &Config{
-		Sources: []SOURCE{},
-		Exposes: []EXPOSE{},
+		Sources:   []SOURCE{},
+		Exposes:   []EXPOSE{},
+		Pipelines: []PIPELINE{},
 		Server: SERVER{
 			Node: "test_sdas",
 			Host: "0.0.0.0",

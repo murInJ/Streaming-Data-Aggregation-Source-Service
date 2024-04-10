@@ -87,6 +87,20 @@ func (p *Expose) FastRead(buf []byte) (int, error) {
 					goto SkipFieldError
 				}
 			}
+		case 4:
+			if fieldTypeId == thrift.STRING {
+				l, err = p.FastReadField4(buf[offset:])
+				offset += l
+				if err != nil {
+					goto ReadFieldError
+				}
+			} else {
+				l, err = bthrift.Binary.Skip(buf[offset:], fieldTypeId)
+				offset += l
+				if err != nil {
+					goto SkipFieldError
+				}
+			}
 		default:
 			l, err = bthrift.Binary.Skip(buf[offset:], fieldTypeId)
 			offset += l
@@ -164,6 +178,20 @@ func (p *Expose) FastReadField3(buf []byte) (int, error) {
 	return offset, nil
 }
 
+func (p *Expose) FastReadField4(buf []byte) (int, error) {
+	offset := 0
+
+	if v, l, err := bthrift.Binary.ReadString(buf[offset:]); err != nil {
+		return offset, err
+	} else {
+		offset += l
+
+		p.SourceName = v
+
+	}
+	return offset, nil
+}
+
 // for compatibility
 func (p *Expose) FastWrite(buf []byte) int {
 	return 0
@@ -176,6 +204,7 @@ func (p *Expose) FastWriteNocopy(buf []byte, binaryWriter bthrift.BinaryWriter) 
 		offset += p.fastWriteField1(buf[offset:], binaryWriter)
 		offset += p.fastWriteField2(buf[offset:], binaryWriter)
 		offset += p.fastWriteField3(buf[offset:], binaryWriter)
+		offset += p.fastWriteField4(buf[offset:], binaryWriter)
 	}
 	offset += bthrift.Binary.WriteFieldStop(buf[offset:])
 	offset += bthrift.Binary.WriteStructEnd(buf[offset:])
@@ -189,6 +218,7 @@ func (p *Expose) BLength() int {
 		l += p.field1Length()
 		l += p.field2Length()
 		l += p.field3Length()
+		l += p.field4Length()
 	}
 	l += bthrift.Binary.FieldStopLength()
 	l += bthrift.Binary.StructEndLength()
@@ -222,6 +252,15 @@ func (p *Expose) fastWriteField3(buf []byte, binaryWriter bthrift.BinaryWriter) 
 	return offset
 }
 
+func (p *Expose) fastWriteField4(buf []byte, binaryWriter bthrift.BinaryWriter) int {
+	offset := 0
+	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "source_name", thrift.STRING, 4)
+	offset += bthrift.Binary.WriteStringNocopy(buf[offset:], binaryWriter, p.SourceName)
+
+	offset += bthrift.Binary.WriteFieldEnd(buf[offset:])
+	return offset
+}
+
 func (p *Expose) field1Length() int {
 	l := 0
 	l += bthrift.Binary.FieldBeginLength("type", thrift.STRING, 1)
@@ -244,6 +283,15 @@ func (p *Expose) field3Length() int {
 	l := 0
 	l += bthrift.Binary.FieldBeginLength("content", thrift.STRING, 3)
 	l += bthrift.Binary.StringLengthNocopy(p.Content)
+
+	l += bthrift.Binary.FieldEndLength()
+	return l
+}
+
+func (p *Expose) field4Length() int {
+	l := 0
+	l += bthrift.Binary.FieldBeginLength("source_name", thrift.STRING, 4)
+	l += bthrift.Binary.StringLengthNocopy(p.SourceName)
 
 	l += bthrift.Binary.FieldEndLength()
 	return l

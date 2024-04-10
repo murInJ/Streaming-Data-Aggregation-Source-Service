@@ -14,8 +14,9 @@ type Client interface {
 	AddSource(ctx context.Context, req *api.AddSourceRequest, callOptions ...callopt.Option) (r *api.AddSourceResponse, err error)
 	RemoveSource(ctx context.Context, req *api.RemoveSourceRequest, callOptions ...callopt.Option) (r *api.RemoveSourceResponse, err error)
 	ListSources(ctx context.Context, callOptions ...callopt.Option) (r *api.ListSourcesResponse, err error)
-	SetPipeline(ctx context.Context, req *api.SetPipelineRequest, callOptions ...callopt.Option) (r *api.SetPipelineResponse, err error)
-	QueryPipeline(ctx context.Context, callOptions ...callopt.Option) (r *api.QueryPipelineResponse, err error)
+	AddPipeline(ctx context.Context, req *api.AddPipelineRequest, callOptions ...callopt.Option) (r *api.AddPipelineResponse, err error)
+	RemovePipeline(ctx context.Context, req *api.RemovePipelineRequest, callOptions ...callopt.Option) (r *api.RemovePipelineResponse, err error)
+	ListPipeline(ctx context.Context, callOptions ...callopt.Option) (r *api.ListPipelinesResponse, err error)
 	AddExpose(ctx context.Context, req *api.AddExposeRequest, callOptions ...callopt.Option) (r *api.AddExposeResponse, err error)
 	RemoveExpose(ctx context.Context, req *api.RemoveExposeRequest, callOptions ...callopt.Option) (r *api.RemoveExposeResponse, err error)
 	ListExposes(ctx context.Context, callOptions ...callopt.Option) (r *api.ListExposesResponse, err error)
@@ -65,14 +66,19 @@ func (p *kSDASClient) ListSources(ctx context.Context, callOptions ...callopt.Op
 	return p.kClient.ListSources(ctx)
 }
 
-func (p *kSDASClient) SetPipeline(ctx context.Context, req *api.SetPipelineRequest, callOptions ...callopt.Option) (r *api.SetPipelineResponse, err error) {
+func (p *kSDASClient) AddPipeline(ctx context.Context, req *api.AddPipelineRequest, callOptions ...callopt.Option) (r *api.AddPipelineResponse, err error) {
 	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
-	return p.kClient.SetPipeline(ctx, req)
+	return p.kClient.AddPipeline(ctx, req)
 }
 
-func (p *kSDASClient) QueryPipeline(ctx context.Context, callOptions ...callopt.Option) (r *api.QueryPipelineResponse, err error) {
+func (p *kSDASClient) RemovePipeline(ctx context.Context, req *api.RemovePipelineRequest, callOptions ...callopt.Option) (r *api.RemovePipelineResponse, err error) {
 	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
-	return p.kClient.QueryPipeline(ctx)
+	return p.kClient.RemovePipeline(ctx, req)
+}
+
+func (p *kSDASClient) ListPipeline(ctx context.Context, callOptions ...callopt.Option) (r *api.ListPipelinesResponse, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.ListPipeline(ctx)
 }
 
 func (p *kSDASClient) AddExpose(ctx context.Context, req *api.AddExposeRequest, callOptions ...callopt.Option) (r *api.AddExposeResponse, err error) {

@@ -9,9 +9,10 @@ import (
 )
 
 type Expose struct {
-	Type    string `thrift:"type,1" frugal:"1,default,string" json:"type"`
-	Name    string `thrift:"name,2" frugal:"2,default,string" json:"name"`
-	Content string `thrift:"content,3" frugal:"3,default,string" json:"content"`
+	Type       string `thrift:"type,1" frugal:"1,default,string" json:"type"`
+	Name       string `thrift:"name,2" frugal:"2,default,string" json:"name"`
+	Content    string `thrift:"content,3" frugal:"3,default,string" json:"content"`
+	SourceName string `thrift:"source_name,4" frugal:"4,default,string" json:"source_name"`
 }
 
 func NewExpose() *Expose {
@@ -33,6 +34,10 @@ func (p *Expose) GetName() (v string) {
 func (p *Expose) GetContent() (v string) {
 	return p.Content
 }
+
+func (p *Expose) GetSourceName() (v string) {
+	return p.SourceName
+}
 func (p *Expose) SetType(val string) {
 	p.Type = val
 }
@@ -42,11 +47,15 @@ func (p *Expose) SetName(val string) {
 func (p *Expose) SetContent(val string) {
 	p.Content = val
 }
+func (p *Expose) SetSourceName(val string) {
+	p.SourceName = val
+}
 
 var fieldIDToName_Expose = map[int16]string{
 	1: "type",
 	2: "name",
 	3: "content",
+	4: "source_name",
 }
 
 func (p *Expose) Read(iprot thrift.TProtocol) (err error) {
@@ -87,6 +96,14 @@ func (p *Expose) Read(iprot thrift.TProtocol) (err error) {
 		case 3:
 			if fieldTypeId == thrift.STRING {
 				if err = p.ReadField3(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 4:
+			if fieldTypeId == thrift.STRING {
+				if err = p.ReadField4(iprot); err != nil {
 					goto ReadFieldError
 				}
 			} else if err = iprot.Skip(fieldTypeId); err != nil {
@@ -148,6 +165,15 @@ func (p *Expose) ReadField3(iprot thrift.TProtocol) error {
 	}
 	return nil
 }
+func (p *Expose) ReadField4(iprot thrift.TProtocol) error {
+
+	if v, err := iprot.ReadString(); err != nil {
+		return err
+	} else {
+		p.SourceName = v
+	}
+	return nil
+}
 
 func (p *Expose) Write(oprot thrift.TProtocol) (err error) {
 	var fieldId int16
@@ -165,6 +191,10 @@ func (p *Expose) Write(oprot thrift.TProtocol) (err error) {
 		}
 		if err = p.writeField3(oprot); err != nil {
 			fieldId = 3
+			goto WriteFieldError
+		}
+		if err = p.writeField4(oprot); err != nil {
+			fieldId = 4
 			goto WriteFieldError
 		}
 	}
@@ -236,6 +266,23 @@ WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 3 end error: ", p), err)
 }
 
+func (p *Expose) writeField4(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("source_name", thrift.STRING, 4); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := oprot.WriteString(p.SourceName); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 4 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 4 end error: ", p), err)
+}
+
 func (p *Expose) String() string {
 	if p == nil {
 		return "<nil>"
@@ -259,6 +306,9 @@ func (p *Expose) DeepEqual(ano *Expose) bool {
 	if !p.Field3DeepEqual(ano.Content) {
 		return false
 	}
+	if !p.Field4DeepEqual(ano.SourceName) {
+		return false
+	}
 	return true
 }
 
@@ -279,6 +329,13 @@ func (p *Expose) Field2DeepEqual(src string) bool {
 func (p *Expose) Field3DeepEqual(src string) bool {
 
 	if strings.Compare(p.Content, src) != 0 {
+		return false
+	}
+	return true
+}
+func (p *Expose) Field4DeepEqual(src string) bool {
+
+	if strings.Compare(p.SourceName, src) != 0 {
 		return false
 	}
 	return true

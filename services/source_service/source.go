@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"reflect"
+	"runtime"
 	"sync"
 
 	"github.com/cloudwego/kitex/pkg/klog"
@@ -38,7 +39,10 @@ func addRtspSource(source_config *config.SOURCE) error {
 	name := source_config.Name
 	var source config.SOURCE_RTSP
 	json.Unmarshal([]byte(source_config.Content), &source)
-	entity := NewEntityRtsp(name, &source)
+	entity, err := NewSourceEntityRtsp(name, &source)
+	if err != nil {
+		return err
+	}
 	entity.Start()
 	for {
 		switch entity.Status {
@@ -48,6 +52,8 @@ func addRtspSource(source_config *config.SOURCE) error {
 		case ERR:
 			err := errors.New("rtsp source start error")
 			return err
+		default:
+			runtime.Gosched()
 		}
 	}
 }

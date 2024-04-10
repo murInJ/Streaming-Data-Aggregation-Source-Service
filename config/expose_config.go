@@ -1,10 +1,10 @@
 package config
 
 type EXPOSE struct {
-	Type         string `json:"type"`
-	Expose       any    `json:"expose"`
-	Name         string `json:"name"`
-	PipelineName string `json:"pipeline_name"`
+	Type       string `json:"type"`
+	Content    string `json:"content"`
+	Name       string `json:"name"`
+	SourceName string `json:"source_name"`
 }
 
 /*
@@ -20,6 +20,7 @@ type EXPOSE_RTSP struct {
 	MulticastIPRange  string `json:"multicast_ip_range"`
 	MulticastRTPPort  int    `json:"multicast_rtp_port"`
 	MulticastRTCPPort int    `json:"multicast_rtcp_port"`
+	Format            string `json:"format"`
 }
 
 type EXPOSE_HTTP struct {

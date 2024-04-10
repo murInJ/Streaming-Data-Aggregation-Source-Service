@@ -34,17 +34,24 @@ var serviceMethods = map[string]kitex.MethodInfo{
 		false,
 		kitex.WithStreamingMode(kitex.StreamingNone),
 	),
-	"SetPipeline": kitex.NewMethodInfo(
-		setPipelineHandler,
-		newSDASSetPipelineArgs,
-		newSDASSetPipelineResult,
+	"AddPipeline": kitex.NewMethodInfo(
+		addPipelineHandler,
+		newSDASAddPipelineArgs,
+		newSDASAddPipelineResult,
 		false,
 		kitex.WithStreamingMode(kitex.StreamingNone),
 	),
-	"QueryPipeline": kitex.NewMethodInfo(
-		queryPipelineHandler,
-		newSDASQueryPipelineArgs,
-		newSDASQueryPipelineResult,
+	"RemovePipeline": kitex.NewMethodInfo(
+		removePipelineHandler,
+		newSDASRemovePipelineArgs,
+		newSDASRemovePipelineResult,
+		false,
+		kitex.WithStreamingMode(kitex.StreamingNone),
+	),
+	"ListPipeline": kitex.NewMethodInfo(
+		listPipelineHandler,
+		newSDASListPipelineArgs,
+		newSDASListPipelineResult,
 		false,
 		kitex.WithStreamingMode(kitex.StreamingNone),
 	),
@@ -189,40 +196,58 @@ func newSDASListSourcesResult() interface{} {
 	return api.NewSDASListSourcesResult()
 }
 
-func setPipelineHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
-	realArg := arg.(*api.SDASSetPipelineArgs)
-	realResult := result.(*api.SDASSetPipelineResult)
-	success, err := handler.(api.SDAS).SetPipeline(ctx, realArg.Req)
+func addPipelineHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	realArg := arg.(*api.SDASAddPipelineArgs)
+	realResult := result.(*api.SDASAddPipelineResult)
+	success, err := handler.(api.SDAS).AddPipeline(ctx, realArg.Req)
 	if err != nil {
 		return err
 	}
 	realResult.Success = success
 	return nil
 }
-func newSDASSetPipelineArgs() interface{} {
-	return api.NewSDASSetPipelineArgs()
+func newSDASAddPipelineArgs() interface{} {
+	return api.NewSDASAddPipelineArgs()
 }
 
-func newSDASSetPipelineResult() interface{} {
-	return api.NewSDASSetPipelineResult()
+func newSDASAddPipelineResult() interface{} {
+	return api.NewSDASAddPipelineResult()
 }
 
-func queryPipelineHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
-	_ = arg.(*api.SDASQueryPipelineArgs)
-	realResult := result.(*api.SDASQueryPipelineResult)
-	success, err := handler.(api.SDAS).QueryPipeline(ctx)
+func removePipelineHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	realArg := arg.(*api.SDASRemovePipelineArgs)
+	realResult := result.(*api.SDASRemovePipelineResult)
+	success, err := handler.(api.SDAS).RemovePipeline(ctx, realArg.Req)
 	if err != nil {
 		return err
 	}
 	realResult.Success = success
 	return nil
 }
-func newSDASQueryPipelineArgs() interface{} {
-	return api.NewSDASQueryPipelineArgs()
+func newSDASRemovePipelineArgs() interface{} {
+	return api.NewSDASRemovePipelineArgs()
 }
 
-func newSDASQueryPipelineResult() interface{} {
-	return api.NewSDASQueryPipelineResult()
+func newSDASRemovePipelineResult() interface{} {
+	return api.NewSDASRemovePipelineResult()
+}
+
+func listPipelineHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	_ = arg.(*api.SDASListPipelineArgs)
+	realResult := result.(*api.SDASListPipelineResult)
+	success, err := handler.(api.SDAS).ListPipeline(ctx)
+	if err != nil {
+		return err
+	}
+	realResult.Success = success
+	return nil
+}
+func newSDASListPipelineArgs() interface{} {
+	return api.NewSDASListPipelineArgs()
+}
+
+func newSDASListPipelineResult() interface{} {
+	return api.NewSDASListPipelineResult()
 }
 
 func addExposeHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
@@ -318,20 +343,30 @@ func (p *kClient) ListSources(ctx context.Context) (r *api.ListSourcesResponse, 
 	return _result.GetSuccess(), nil
 }
 
-func (p *kClient) SetPipeline(ctx context.Context, req *api.SetPipelineRequest) (r *api.SetPipelineResponse, err error) {
-	var _args api.SDASSetPipelineArgs
+func (p *kClient) AddPipeline(ctx context.Context, req *api.AddPipelineRequest) (r *api.AddPipelineResponse, err error) {
+	var _args api.SDASAddPipelineArgs
 	_args.Req = req
-	var _result api.SDASSetPipelineResult
-	if err = p.c.Call(ctx, "SetPipeline", &_args, &_result); err != nil {
+	var _result api.SDASAddPipelineResult
+	if err = p.c.Call(ctx, "AddPipeline", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil
 }
 
-func (p *kClient) QueryPipeline(ctx context.Context) (r *api.QueryPipelineResponse, err error) {
-	var _args api.SDASQueryPipelineArgs
-	var _result api.SDASQueryPipelineResult
-	if err = p.c.Call(ctx, "QueryPipeline", &_args, &_result); err != nil {
+func (p *kClient) RemovePipeline(ctx context.Context, req *api.RemovePipelineRequest) (r *api.RemovePipelineResponse, err error) {
+	var _args api.SDASRemovePipelineArgs
+	_args.Req = req
+	var _result api.SDASRemovePipelineResult
+	if err = p.c.Call(ctx, "RemovePipeline", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+
+func (p *kClient) ListPipeline(ctx context.Context) (r *api.ListPipelinesResponse, err error) {
+	var _args api.SDASListPipelineArgs
+	var _result api.SDASListPipelineResult
+	if err = p.c.Call(ctx, "ListPipeline", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil

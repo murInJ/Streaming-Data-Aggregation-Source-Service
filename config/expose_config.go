@@ -31,6 +31,7 @@ type EXPOSE_RPC struct {
 	//TODO: going to be defined
 }
 
-type EXPOSE_PUSH struct {
-	//TODO: going to be defined
+type EXPOSE_PULL struct {
+	Op      int    `json:"op"`
+	MsgType string `json:"msg_type"`
 }

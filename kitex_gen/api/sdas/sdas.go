@@ -6,8 +6,10 @@ import (
 	api "SDAS/kitex_gen/api"
 	"context"
 	"errors"
+	"fmt"
 	client "github.com/cloudwego/kitex/client"
 	kitex "github.com/cloudwego/kitex/pkg/serviceinfo"
+	streaming "github.com/cloudwego/kitex/pkg/streaming"
 )
 
 var errInvalidMessageType = errors.New("invalid message type for service method handler")
@@ -76,6 +78,13 @@ var serviceMethods = map[string]kitex.MethodInfo{
 		false,
 		kitex.WithStreamingMode(kitex.StreamingNone),
 	),
+	"PullExposeStream": kitex.NewMethodInfo(
+		pullExposeStreamHandler,
+		newSDASPullExposeStreamArgs,
+		newSDASPullExposeStreamResult,
+		false,
+		kitex.WithStreamingMode(kitex.StreamingBidirectional),
+	),
 }
 
 var (
@@ -101,7 +110,7 @@ func serviceInfoForClient() *kitex.ServiceInfo {
 
 // NewServiceInfo creates a new ServiceInfo containing all methods
 func NewServiceInfo() *kitex.ServiceInfo {
-	return newServiceInfo(false, true, true)
+	return newServiceInfo(true, true, true)
 }
 
 // NewServiceInfo creates a new ServiceInfo containing non-streaming methods
@@ -304,6 +313,55 @@ func newSDASListExposesResult() interface{} {
 	return api.NewSDASListExposesResult()
 }
 
+func pullExposeStreamHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	st, ok := arg.(*streaming.Args)
+	if !ok {
+		return errors.New("SDAS.PullExposeStream is a thrift streaming method, please call with Kitex StreamClient")
+	}
+	stream := &sDASPullExposeStreamServer{st.Stream}
+	return handler.(api.SDAS).PullExposeStream(stream)
+}
+
+type sDASPullExposeStreamClient struct {
+	streaming.Stream
+}
+
+func (x *sDASPullExposeStreamClient) DoFinish(err error) {
+	if finisher, ok := x.Stream.(streaming.WithDoFinish); ok {
+		finisher.DoFinish(err)
+	} else {
+		panic(fmt.Sprintf("streaming.WithDoFinish is not implemented by %T", x.Stream))
+	}
+}
+func (x *sDASPullExposeStreamClient) Send(m *api.PullExposeStreamRequest) error {
+	return x.Stream.SendMsg(m)
+}
+func (x *sDASPullExposeStreamClient) Recv() (*api.PullExposeStreamResponse, error) {
+	m := new(api.PullExposeStreamResponse)
+	return m, x.Stream.RecvMsg(m)
+}
+
+type sDASPullExposeStreamServer struct {
+	streaming.Stream
+}
+
+func (x *sDASPullExposeStreamServer) Send(m *api.PullExposeStreamResponse) error {
+	return x.Stream.SendMsg(m)
+}
+
+func (x *sDASPullExposeStreamServer) Recv() (*api.PullExposeStreamRequest, error) {
+	m := new(api.PullExposeStreamRequest)
+	return m, x.Stream.RecvMsg(m)
+}
+
+func newSDASPullExposeStreamArgs() interface{} {
+	return api.NewSDASPullExposeStreamArgs()
+}
+
+func newSDASPullExposeStreamResult() interface{} {
+	return api.NewSDASPullExposeStreamResult()
+}
+
 type kClient struct {
 	c client.Client
 }
@@ -399,4 +457,18 @@ func (p *kClient) ListExposes(ctx context.Context) (r *api.ListExposesResponse, 
 		return
 	}
 	return _result.GetSuccess(), nil
+}
+
+func (p *kClient) PullExposeStream(ctx context.Context) (SDAS_PullExposeStreamClient, error) {
+	streamClient, ok := p.c.(client.Streaming)
+	if !ok {
+		return nil, fmt.Errorf("client not support streaming")
+	}
+	res := new(streaming.Result)
+	err := streamClient.Stream(ctx, "PullExposeStream", nil, res)
+	if err != nil {
+		return nil, err
+	}
+	stream := &sDASPullExposeStreamClient{res.Stream}
+	return stream, nil
 }

@@ -30,3 +30,14 @@ struct ListExposesResponse {
         2: i32 code
         3: list<Expose> exposes
 }
+
+struct PullExposeStreamRequest {
+        1: Expose expose
+}
+
+struct PullExposeStreamResponse {
+        1: string message
+        2: i32 code
+        3: string data
+        4: string type
+}

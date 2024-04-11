@@ -31,8 +31,8 @@ func NewDefaultConfig() {
 	}
 }
 
-func SaveConfigJSON(filename string) error {
-	content, err := json.MarshalIndent(Conf, "", "  ")
+func SaveConfigJSON(filename string, conf *Config) error {
+	content, err := json.MarshalIndent(conf, "", "  ")
 	if err != nil {
 		err = fmt.Errorf("failed to marshal config: %w", err)
 		klog.Error(err)
@@ -52,7 +52,7 @@ func LoadConfig(filename string) error {
 	if os.IsNotExist(err) {
 		// 如果文件不存在，创建并使用默认配置
 		NewDefaultConfig()
-		err := SaveConfigJSON(filename)
+		err := SaveConfigJSON(filename, Conf)
 		if err != nil {
 			err = fmt.Errorf("failed to save default config: %w", err)
 			klog.Error(err)

@@ -2,7 +2,7 @@ package services
 
 import (
 	config "SDAS/config"
-	decoder "SDAS/services/source_service/decoder"
+	decoder "SDAS/utils/decoder"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -26,13 +26,21 @@ var (
 )
 
 type MessageRtsp struct {
-	Img *image.Image
+	Img image.RGBA
 	NTP int64
 }
 
-type SourceEntityRtsp struct {
+func (m MessageRtsp) GetNTP() int64 {
+	return m.NTP
+}
+
+func (m MessageRtsp) GetImage() (image.Image, bool) {
+	return &m.Img, true
+}
+
+type SourceEntityRtsp[T SOURCE_MESSAGE] struct {
 	ControlChannel *chan int
-	OutputChannel  *chan MessageRtsp
+	OutputChannel  *chan T
 	Status         int
 	Source         *config.SOURCE_RTSP
 	Name           string
@@ -40,7 +48,7 @@ type SourceEntityRtsp struct {
 	Decoder        any
 }
 
-func NewSourceEntityRtsp(name string, source *config.SOURCE_RTSP) (*SourceEntityRtsp, error) {
+func NewSourceEntityRtsp(name string, source *config.SOURCE_RTSP) (*SourceEntityRtsp[MessageRtsp], error) {
 	control_channel := make(chan int)
 	output_channel := make(chan MessageRtsp, 1024)
 	if source.Format == "h264" {
@@ -50,7 +58,7 @@ func NewSourceEntityRtsp(name string, source *config.SOURCE_RTSP) (*SourceEntity
 			return nil, err
 		}
 		frameDec.Initialize()
-		entity := &SourceEntityRtsp{
+		entity := &SourceEntityRtsp[MessageRtsp]{
 			Name:           name,
 			Type:           "rtsp",
 			ControlChannel: &control_channel,
@@ -64,7 +72,7 @@ func NewSourceEntityRtsp(name string, source *config.SOURCE_RTSP) (*SourceEntity
 	return nil, errors.New("unknown source type")
 }
 
-func (e *SourceEntityRtsp) GetSourceString() (string, error) {
+func (e *SourceEntityRtsp[T]) GetSourceString() (string, error) {
 	b, err := json.Marshal(e.Source)
 	if err != nil {
 		return "", err
@@ -72,27 +80,37 @@ func (e *SourceEntityRtsp) GetSourceString() (string, error) {
 	return string(b), nil
 }
 
-func (e *SourceEntityRtsp) GetName() string {
+func (e *SourceEntityRtsp[T]) GetName() string {
 	return e.Name
 }
 
-func (e *SourceEntityRtsp) GetType() string {
+func (e *SourceEntityRtsp[T]) GetType() string {
 	return e.Type
 }
 
-func (e *SourceEntityRtsp) Start() {
+func (e *SourceEntityRtsp[T]) GetOutChannel() *chan T {
+	return e.OutputChannel
+}
+
+func (e *SourceEntityRtsp[T]) send_to_out_channel(msg T) {
+	*e.OutputChannel <- msg
+}
+
+func (e *SourceEntityRtsp[T]) Start() {
 	go e.goroutine_rtsp_source()
 }
 
-func (e *SourceEntityRtsp) Stop() {
+func (e *SourceEntityRtsp[T]) Stop() {
 	*e.ControlChannel <- CLOSE
+	close(*e.OutputChannel)
+	close(*e.ControlChannel)
 }
 
-func (e *SourceEntityRtsp) goroutine_rtsp_source() {
+func (e *SourceEntityRtsp[T]) goroutine_rtsp_source() {
 	c, err := e.startup_rstp()
 	if err != nil {
 		e.Status = ERR
-		klog.Errorf("source[rtsp]: %s open failed.", e.Name)
+		klog.Errorf("source[rtsp]: %s open failed. %v", e.Name, err)
 		return
 	}
 	e.Status = OPEN
@@ -115,7 +133,7 @@ func (e *SourceEntityRtsp) goroutine_rtsp_source() {
 	}
 }
 
-func (e *SourceEntityRtsp) startup_rstp() (*gortsplib.Client, error) {
+func (e *SourceEntityRtsp[T]) startup_rstp() (*gortsplib.Client, error) {
 
 	c := gortsplib.Client{}
 
@@ -132,7 +150,6 @@ func (e *SourceEntityRtsp) startup_rstp() (*gortsplib.Client, error) {
 		klog.Error(err)
 		return nil, err
 	}
-	defer c.Close()
 
 	desc, _, err := c.Describe(u)
 	if err != nil {
@@ -158,7 +175,7 @@ func (e *SourceEntityRtsp) startup_rstp() (*gortsplib.Client, error) {
 	return &c, nil
 }
 
-func (e *SourceEntityRtsp) handler_h264(c *gortsplib.Client, desc *description.Session) error {
+func (e *SourceEntityRtsp[T]) handler_h264(c *gortsplib.Client, desc *description.Session) error {
 	var forma *format.H264
 	medi := desc.FindFormat(&forma)
 	if medi == nil {
@@ -211,11 +228,15 @@ func (e *SourceEntityRtsp) handler_h264(c *gortsplib.Client, desc *description.S
 				runtime.Gosched()
 				continue
 			}
+			rgba := img.(*image.RGBA)
+			var msg SOURCE_MESSAGE
 			if ntpAvailable {
-				*e.OutputChannel <- MessageRtsp{Img: &img, NTP: ntp.UnixNano()}
+				msg = MessageRtsp{Img: *rgba, NTP: ntp.UnixNano()}
 			} else {
-				*e.OutputChannel <- MessageRtsp{Img: &img, NTP: time.Now().UnixNano()}
+				msg = MessageRtsp{Img: *rgba, NTP: time.Now().UnixNano()}
 			}
+
+			e.send_to_out_channel(msg.(T))
 
 		}
 	})

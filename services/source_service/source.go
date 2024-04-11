@@ -4,21 +4,30 @@ import (
 	config "SDAS/config"
 	"encoding/json"
 	"errors"
+	"image"
 	"reflect"
 	"runtime"
 	"sync"
 
 	"github.com/cloudwego/kitex/pkg/klog"
+	clone "github.com/huandu/go-clone/generic"
 )
 
 var Sources sync.Map
 
-type SOURCE_ENTITY interface {
+type SOURCE_ENTITY[T SOURCE_MESSAGE] interface {
 	Start()
 	Stop()
 	GetSourceString() (string, error)
 	GetName() string
 	GetType() string
+	GetOutChannel() *chan T
+	send_to_out_channel(msg T)
+}
+
+type SOURCE_MESSAGE interface {
+	GetNTP() int64
+	GetImage() (image.Image, bool)
 }
 
 func InitSource() {
@@ -60,7 +69,7 @@ func addRtspSource(source_config *config.SOURCE) error {
 
 func refreshSource() {
 	NewSources := []config.SOURCE{}
-
+	configSources := []config.SOURCE{}
 	Sources.Range(func(key, value interface{}) bool {
 		v := reflect.ValueOf(value)
 
@@ -72,10 +81,15 @@ func refreshSource() {
 			Type:    v.MethodByName("GetType").Call([]reflect.Value{})[0].Interface().(string),
 			Content: sourceString,
 		}
-		NewSources = append(NewSources, source)
+		if source.Type == "rtsp" {
+			NewSources = append(NewSources, source)
+		}
+
 		return true
 	})
-
+	cp_conf := clone.Clone(config.Conf)
+	cp_conf.Sources = configSources
+	config.SaveConfigJSON("./config.json", cp_conf)
 	config.Conf.Sources = NewSources
 }
 
@@ -85,7 +99,6 @@ func AddRtspSource(source_config *config.SOURCE) error {
 		return err
 	}
 	refreshSource()
-	config.SaveConfigJSON("./config.json")
 	return nil
 }
 
@@ -95,7 +108,6 @@ func RemoveSource(name string) {
 		v.MethodByName("Stop").Call([]reflect.Value{})
 		Sources.Delete(name)
 		refreshSource()
-		config.SaveConfigJSON("./config.json")
 	}
 }
 

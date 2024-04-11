@@ -1,311 +1,358 @@
 package services
 
-import (
-	config "SDAS/config"
-	"SDAS/services/expose_service/encoder"
-	source "SDAS/services/source_service"
-	"encoding/json"
-	"errors"
-	"fmt"
-	"image"
-	"sync"
-	"time"
+// import (
+// 	config "SDAS/config"
+// 	"SDAS/services/expose_service/encoder"
+// 	source "SDAS/services/source_service"
+// 	"encoding/json"
+// 	"errors"
+// 	"fmt"
+// 	"image"
+// 	"strings"
+// 	"sync"
+// 	"time"
 
-	"github.com/bluenviron/gortsplib/v4"
-	"github.com/bluenviron/gortsplib/v4/pkg/base"
-	"github.com/bluenviron/gortsplib/v4/pkg/description"
-	"github.com/cloudwego/kitex/pkg/klog"
-	"github.com/pion/rtp"
-)
+// 	"github.com/bluenviron/gortsplib/v4"
+// 	"github.com/bluenviron/gortsplib/v4/pkg/base"
+// 	"github.com/bluenviron/gortsplib/v4/pkg/description"
+// 	"github.com/cloudwego/kitex/pkg/klog"
+// 	"github.com/pion/rtp"
+// )
 
-var (
-	CLOSE = 0
-	ERR   = 1
-	OPEN  = 2
-)
+// var (
+// 	CLOSE = 0
+// 	ERR   = 1
+// 	OPEN  = 2
+// )
 
-type ExposeEntityRtsp struct {
-	ControlChannel *chan int
-	InputChannel   *chan source.MessageRtsp
-	Status         int
-	Expose         *config.EXPOSE_RTSP
-	Name           string
-	Type           string
-	Server         *RtspServer
-	Stream         *gortsplib.ServerStream
-	Desc           *description.Session
-	SourceName     string
-	Encoder        any
-	Height int,
-	Width int,
-}
+// func addRtspExpose(expose_config *config.EXPOSE) error {
+// 	name := expose_config.Name
+// 	var expose config.EXPOSE_RTSP
+// 	json.Unmarshal([]byte(expose_config.Content), &expose)
+// 	entity, err := NewExposeEntityRtsp(name, &expose, expose_config.SourceName)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	entity.Start()
+// 	for {
+// 		switch entity.Status {
+// 		case OPEN:
+// 			Exposes.Store(name, entity)
+// 			return nil
+// 		case ERR:
+// 			err := errors.New("rtsp source start error")
+// 			return err
+// 		default:
+// 			runtime.Gosched()
+// 		}
+// 	}
+// }
 
-func NewExposeEntityRtsp(name string, expose *config.EXPOSE_RTSP, sourceName string) (*ExposeEntityRtsp, error) {
-	control_channel := make(chan int)
+// func AddRtspExpose(expose_config *config.EXPOSE) error {
+// 	err := addRtspExpose(expose_config)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	refreshExpose()
+// 	config.SaveConfigJSON("./config.json")
+// 	return nil
+// }
 
-	i, ok := source.Sources.Load(sourceName)
-	if !ok {
-		err := fmt.Errorf("source not found")
-		klog.Error(err)
-		return nil, err
-	}
-	source_entity := i.(*source.SourceEntityRtsp)
-	switch expose.Format {
-	case "h264":
-		h264encoder := &encoder.H264Encoder{}
-		// err := encoder.Initialize(expose.Width, expose.Height)
-		// if err != nil {
-		// 	return nil, err
-		// }
-		entity := &ExposeEntityRtsp{
-			Name:           name,
-			Type:           "rtsp",
-			ControlChannel: &control_channel,
-			InputChannel:   source_entity.OutputChannel,
-			Status:         CLOSE,
-			Expose:         expose,
-			SourceName:     sourceName,
-			Encoder:        h264encoder,
-			Height: 0,
-			Width: 0,
-		}
-		return entity, nil
-	}
-	return nil, errors.New("expose Format type not support")
+// type ExposeEntityRtsp struct {
+// 	ControlChannel *chan int
+// 	InputChannel   *chan source.MessageRtsp
+// 	Status         int
+// 	Expose         *config.EXPOSE_RTSP
+// 	Name           string
+// 	Type           string
+// 	Server         *RtspServer
+// 	Stream         *gortsplib.ServerStream
+// 	Desc           *description.Session
+// 	SourceName     string
+// 	Encoder        any
+// 	Height         int
+// 	Width          int
+// }
 
-}
+// func NewExposeEntityRtsp(name string, expose *config.EXPOSE_RTSP, sourceName string) (*ExposeEntityRtsp, error) {
+// 	control_channel := make(chan int)
 
-func (e *ExposeEntityRtsp) GetExposeString() (string, error) {
-	b, err := json.Marshal(e.Expose)
-	if err != nil {
-		return "", err
-	}
-	return string(b), nil
-}
+// 	i, ok := source.Sources.Load(sourceName)
+// 	if !ok {
+// 		err := fmt.Errorf("source not found")
+// 		klog.Error(err)
+// 		return nil, err
+// 	}
+// 	source_entity := i.(*source.SourceEntityRtsp)
+// 	switch expose.Format {
+// 	case "h264":
+// 		h264encoder := &encoder.H264Encoder{}
+// 		// err := encoder.Initialize(expose.Width, expose.Height)
+// 		// if err != nil {
+// 		// 	return nil, err
+// 		// }
+// 		entity := &ExposeEntityRtsp{
+// 			Name:           name,
+// 			Type:           "rtsp",
+// 			ControlChannel: &control_channel,
+// 			InputChannel:   source_entity.OutputChannel,
+// 			Status:         CLOSE,
+// 			Expose:         expose,
+// 			SourceName:     sourceName,
+// 			Encoder:        h264encoder,
+// 			Height:         0,
+// 			Width:          0,
+// 		}
+// 		return entity, nil
+// 	}
 
-func (e *ExposeEntityRtsp) GetName() string {
-	return e.Name
-}
+// 	return nil, errors.New("expose Format type not support")
 
-func (e *ExposeEntityRtsp) GetType() string {
-	return e.Type
-}
+// }
 
-func (e *ExposeEntityRtsp) GetSourceName() string {
-	return e.SourceName
-}
+// func (e *ExposeEntityRtsp) GetExposeString() (string, error) {
+// 	b, err := json.Marshal(e.Expose)
+// 	if err != nil {
+// 		return "", err
+// 	}
+// 	return string(b), nil
+// }
 
-func (e *ExposeEntityRtsp) Start() {
-	go e.goroutine_rtsp_expose()
-}
+// func (e *ExposeEntityRtsp) GetName() string {
+// 	return e.Name
+// }
 
-func (e *ExposeEntityRtsp) Stop() {
-	*e.ControlChannel <- CLOSE
-}
+// func (e *ExposeEntityRtsp) GetType() string {
+// 	return e.Type
+// }
 
-func (e *ExposeEntityRtsp) goroutine_rtsp_expose() {
+// func (e *ExposeEntityRtsp) GetSourceName() string {
+// 	return e.SourceName
+// }
 
-	c, stream, err := e.startup_rstp()
-	e.Stream = stream
+// func (e *ExposeEntityRtsp) Start() {
+// 	go e.goroutine_rtsp_expose()
+// }
 
-	if err != nil {
-		e.Status = ERR
-		klog.Errorf("expose[rtsp]: %s open failed.", e.Name)
-		return
-	}
-	e.Status = OPEN
-	klog.Infof("expose[rtsp]: %s opened.\n", e.Name)
-	for {
-		select {
-		case command := <-*e.ControlChannel:
-			switch command {
-			case CLOSE:
-				e.Server.setStreamUnready()
-				c.Close()
-				switch e.Expose.Format{
-					case "h264":
-						e.Encoder.(*encoder.H264Encoder).Close()
-				}
-				e.Status = CLOSE
-				klog.Infof("expose[rtsp]: %s closed.\n", e.Name)
-				return
-			}
-		case msgRtsp := <-*e.InputChannel:
-			switch e.Expose.Format {
-			case "h264":
-				err := e.handler_h264(*msgRtsp.Img, msgRtsp.NTP)
-				if err != nil {
-					klog.Errorf("expose[rtsp]: %s handler_h264 error: %v.\n", e.Name, err)
-				}
-			}
-		}
-	}
-}
+// func (e *ExposeEntityRtsp) Stop() {
+// 	*e.ControlChannel <- CLOSE
+// }
 
-func (e *ExposeEntityRtsp) startup_rstp() (*gortsplib.Client, *gortsplib.ServerStream, error) {
-	e.Server = NewRtspServer(e.Name, e.Expose)
-	c := gortsplib.Client{}
+// func (e *ExposeEntityRtsp) goroutine_rtsp_expose() {
 
-	// parse URL
-	u, err := base.ParseURL(e.Expose.RTSPAddress)
-	if err != nil {
-		klog.Error(err)
-		return nil, nil, err
-	}
+// 	c, stream, err := e.startup_rstp()
+// 	e.Stream = stream
 
-	// connect to the server
-	err = c.Start(u.Scheme, u.Host)
-	if err != nil {
-		klog.Error(err)
-		return nil, nil, err
-	}
+// 	if err != nil {
+// 		e.Status = ERR
+// 		klog.Errorf("expose[rtsp]: %s open failed. %v", e.Name, err)
+// 		return
+// 	}
+// 	e.Status = OPEN
+// 	klog.Infof("expose[rtsp]: %s opened.\n", e.Name)
+// 	for {
+// 		select {
+// 		case command := <-*e.ControlChannel:
+// 			switch command {
+// 			case CLOSE:
+// 				e.Server.setStreamUnready()
+// 				c.Close()
+// 				e.Server.s.Close()
+// 				switch e.Expose.Format {
+// 				case "h264":
+// 					e.Encoder.(*encoder.H264Encoder).Close()
+// 				}
+// 				e.Status = CLOSE
+// 				klog.Infof("expose[rtsp]: %s closed.\n", e.Name)
+// 				return
+// 			}
+// 		case msgRtsp := <-*e.InputChannel:
+// 			switch e.Expose.Format {
+// 			case "h264":
+// 				err := e.handler_h264(*msgRtsp.Img, msgRtsp.NTP)
+// 				if err != nil {
+// 					klog.Errorf("expose[rtsp]: %s handler_h264 error: %v.\n", e.Name, err)
+// 				}
+// 			}
+// 		}
+// 	}
+// }
 
-	desc, _, err := c.Describe(u)
-	if err != nil {
-		klog.Error(err)
-		return nil, nil, err
-	}
-	e.Desc = desc
-	stream := e.Server.setStreamReady(desc)
+// func (e *ExposeEntityRtsp) startup_rstp() (*gortsplib.Client, *gortsplib.ServerStream, error) {
+// 	e.Server = NewRtspServer(e.Name, e.Expose)
+// 	e.Server.s.Start()
+// 	c := gortsplib.Client{}
+// 	tmp := strings.Split(e.Expose.RTSPAddress, ":")
+// 	var clientAddr string
+// 	if len(tmp) == 1 {
+// 		clientAddr = fmt.Sprintf("rtsp://127.0.0.1:%s", tmp[0])
+// 	} else if len(tmp) == 2 {
+// 		clientAddr = fmt.Sprintf("rtsp://127.0.0.1:%s", tmp[1])
+// 	} else if len(tmp) == 3 {
+// 		clientAddr = fmt.Sprintf("%s:127.0.0.1:%s", tmp[0], tmp[2])
+// 	} else {
+// 		return nil, nil, fmt.Errorf("RTSPAddress split failed")
+// 	}
+// 	// parse URL
+// 	u, err := base.ParseURL(clientAddr)
+// 	if err != nil {
+// 		klog.Error(err)
+// 		return nil, nil, err
+// 	}
 
-	return &c, stream, nil
-}
+// 	// connect to the server
+// 	err = c.Start(u.Scheme, u.Host)
+// 	if err != nil {
+// 		klog.Error(err)
+// 		return nil, nil, err
+// 	}
 
-func (e *ExposeEntityRtsp) handler_h264(img image.Image, ntp int64) error {
-	ntp_time := time.Unix(ntp/int64(time.Second), ntp%int64(time.Second))
-	
-	if e.Height == 0 && e.Width == 0 {
-		e.Width = img.Bounds().Dx()
-		e.Height = img.Bounds().Dy()
-		e.Encoder.(*encoder.H264Encoder).Initialize(img.Bounds().Dx(), img.Bounds().Dy())
-	}
-	
-	encoded_img, err := e.Encoder.(*encoder.H264Encoder).Encode(img)
-	if err != nil {
-		return err
-	}
-	packet := &rtp.Packet{
-		Header: rtp.Header{
-			Version:        2,
-			PayloadType:    96,
-			SequenceNumber: 0,
-			Timestamp:      uint32(ntp),
-			SSRC:           123456,
-		},
-		Payload: encoded_img,
-	}
-	err = e.Stream.WritePacketRTPWithNTP(e.Desc.Medias[0], packet, ntp_time)
-	if err != nil {
-		return err
-	}
-	return nil
-}
+// 	desc, _, err := c.Describe(u)
+// 	if err != nil {
+// 		klog.Error(333, err)
+// 		return nil, nil, err
+// 	}
+// 	e.Desc = desc
+// 	stream := e.Server.setStreamReady(desc)
 
-/**
-rtsp server
-**/
+// 	return &c, stream, nil
+// }
 
-type RtspServer struct {
-	s      *gortsplib.Server
-	mutex  sync.Mutex
-	stream *gortsplib.ServerStream
-	name   string
-}
+// func (e *ExposeEntityRtsp) handler_h264(img image.Image, ntp int64) error {
+// 	ntp_time := time.Unix(ntp/int64(time.Second), ntp%int64(time.Second))
 
-func NewRtspServer(name string, config *config.EXPOSE_RTSP) *RtspServer {
-	s := &RtspServer{
-		name: name,
-	}
-	// configure the server
-	s.s = &gortsplib.Server{
-		Handler:           s,
-		RTSPAddress:       config.RTSPAddress,
-		UDPRTPAddress:     config.UDPRTPAddress,
-		UDPRTCPAddress:    config.UDPRTCPAddress,
-		MulticastIPRange:  config.MulticastIPRange,
-		MulticastRTPPort:  config.MulticastRTPPort,
-		MulticastRTCPPort: config.MulticastRTCPPort,
-	}
-	return s
-}
+// 	if e.Height == 0 && e.Width == 0 {
+// 		e.Width = img.Bounds().Dx()
+// 		e.Height = img.Bounds().Dy()
+// 		e.Encoder.(*encoder.H264Encoder).Initialize(img.Bounds().Dx(), img.Bounds().Dy())
+// 	}
 
-// called when a connection is opened.
-func (s *RtspServer) OnConnOpen(ctx *gortsplib.ServerHandlerOnConnOpenCtx) {
-	klog.Infof("expose[rtsp]: %s conn opened", s.name)
-}
+// 	encoded_img, err := e.Encoder.(*encoder.H264Encoder).Encode(img)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	packet := &rtp.Packet{
+// 		Header: rtp.Header{
+// 			Version:        2,
+// 			PayloadType:    96,
+// 			SequenceNumber: 0,
+// 			Timestamp:      uint32(ntp),
+// 			SSRC:           123456,
+// 		},
+// 		Payload: encoded_img,
+// 	}
+// 	err = e.Stream.WritePacketRTPWithNTP(e.Desc.Medias[0], packet, ntp_time)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	return nil
+// }
 
-// called when a connection is closed.
-func (s *RtspServer) OnConnClose(ctx *gortsplib.ServerHandlerOnConnCloseCtx) {
-	klog.Infof("expose[rtsp]: %s conn closed (%v)", ctx.Error)
-}
+// /**
+// rtsp server
+// **/
 
-// called when a session is opened.
-func (s *RtspServer) OnSessionOpen(ctx *gortsplib.ServerHandlerOnSessionOpenCtx) {
-	klog.Infof("expose[rtsp]: %s session opened", s.name)
-}
+// type RtspServer struct {
+// 	s      *gortsplib.Server
+// 	mutex  sync.Mutex
+// 	stream *gortsplib.ServerStream
+// 	name   string
+// }
 
-// called when a session is closed.
-func (s *RtspServer) OnSessionClose(ctx *gortsplib.ServerHandlerOnSessionCloseCtx) {
-	klog.Infof("expose[rtsp]: %s session closed", s.name)
-}
+// func NewRtspServer(name string, config *config.EXPOSE_RTSP) *RtspServer {
+// 	s := &RtspServer{
+// 		name: name,
+// 	}
+// 	// configure the server
+// 	s.s = &gortsplib.Server{
+// 		Handler:           s,
+// 		RTSPAddress:       config.RTSPAddress,
+// 		UDPRTPAddress:     config.UDPRTPAddress,
+// 		UDPRTCPAddress:    config.UDPRTCPAddress,
+// 		MulticastIPRange:  config.MulticastIPRange,
+// 		MulticastRTPPort:  config.MulticastRTPPort,
+// 		MulticastRTCPPort: config.MulticastRTCPPort,
+// 	}
+// 	return s
+// }
 
-// called when receiving a DESCRIBE request.
-func (s *RtspServer) OnDescribe(ctx *gortsplib.ServerHandlerOnDescribeCtx) (*base.Response, *gortsplib.ServerStream, error) {
-	klog.Infof("expose[rtsp]: %s describe request", s.name)
+// // called when a connection is opened.
+// func (s *RtspServer) OnConnOpen(ctx *gortsplib.ServerHandlerOnConnOpenCtx) {
+// 	klog.Infof("expose[rtsp]: %s conn opened", s.name)
+// }
 
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
+// // called when a connection is closed.
+// func (s *RtspServer) OnConnClose(ctx *gortsplib.ServerHandlerOnConnCloseCtx) {
+// 	klog.Infof("expose[rtsp]: %s conn closed (%v)", ctx.Error)
+// }
 
-	// stream is not available yet
-	if s.stream == nil {
-		return &base.Response{
-			StatusCode: base.StatusNotFound,
-		}, nil, nil
-	}
+// // called when a session is opened.
+// func (s *RtspServer) OnSessionOpen(ctx *gortsplib.ServerHandlerOnSessionOpenCtx) {
+// 	klog.Infof("expose[rtsp]: %s session opened", s.name)
+// }
 
-	return &base.Response{
-		StatusCode: base.StatusOK,
-	}, s.stream, nil
-}
+// // called when a session is closed.
+// func (s *RtspServer) OnSessionClose(ctx *gortsplib.ServerHandlerOnSessionCloseCtx) {
+// 	klog.Infof("expose[rtsp]: %s session closed", s.name)
+// }
 
-// called when receiving a SETUP request.
-func (s *RtspServer) OnSetup(ctx *gortsplib.ServerHandlerOnSetupCtx) (*base.Response, *gortsplib.ServerStream, error) {
-	klog.Infof("expose[rtsp]: %s setup request", s.name)
+// // called when receiving a DESCRIBE request.
+// func (s *RtspServer) OnDescribe(ctx *gortsplib.ServerHandlerOnDescribeCtx) (*base.Response, *gortsplib.ServerStream, error) {
+// 	klog.Infof("expose[rtsp]: %s describe request", s.name)
 
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
+// 	s.mutex.Lock()
+// 	defer s.mutex.Unlock()
 
-	// stream is not available yet
-	if s.stream == nil {
-		return &base.Response{
-			StatusCode: base.StatusNotFound,
-		}, nil, nil
-	}
+// 	// stream is not available yet
+// 	if s.stream == nil {
+// 		return &base.Response{
+// 			StatusCode: base.StatusNotFound,
+// 		}, nil, nil
+// 	}
 
-	return &base.Response{
-		StatusCode: base.StatusOK,
-	}, s.stream, nil
-}
+// 	return &base.Response{
+// 		StatusCode: base.StatusOK,
+// 	}, s.stream, nil
+// }
 
-// called when receiving a PLAY request.
-func (s *RtspServer) OnPlay(ctx *gortsplib.ServerHandlerOnPlayCtx) (*base.Response, error) {
-	klog.Infof("expose[rtsp]: %s play request", s.name)
+// // called when receiving a SETUP request.
+// func (s *RtspServer) OnSetup(ctx *gortsplib.ServerHandlerOnSetupCtx) (*base.Response, *gortsplib.ServerStream, error) {
+// 	klog.Infof("expose[rtsp]: %s setup request", s.name)
 
-	return &base.Response{
-		StatusCode: base.StatusOK,
-	}, nil
-}
+// 	s.mutex.Lock()
+// 	defer s.mutex.Unlock()
 
-func (s *RtspServer) setStreamReady(desc *description.Session) *gortsplib.ServerStream {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-	s.stream = gortsplib.NewServerStream(s.s, desc)
-	return s.stream
-}
+// 	// stream is not available yet
+// 	if s.stream == nil {
+// 		return &base.Response{
+// 			StatusCode: base.StatusNotFound,
+// 		}, nil, nil
+// 	}
 
-func (s *RtspServer) setStreamUnready() {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-	s.stream.Close()
-	s.stream = nil
-}
+// 	return &base.Response{
+// 		StatusCode: base.StatusOK,
+// 	}, s.stream, nil
+// }
+
+// // called when receiving a PLAY request.
+// func (s *RtspServer) OnPlay(ctx *gortsplib.ServerHandlerOnPlayCtx) (*base.Response, error) {
+// 	klog.Infof("expose[rtsp]: %s play request", s.name)
+
+// 	return &base.Response{
+// 		StatusCode: base.StatusOK,
+// 	}, nil
+// }
+
+// func (s *RtspServer) setStreamReady(desc *description.Session) *gortsplib.ServerStream {
+// 	s.mutex.Lock()
+// 	defer s.mutex.Unlock()
+// 	s.stream = gortsplib.NewServerStream(s.s, desc)
+// 	return s.stream
+// }
+
+// func (s *RtspServer) setStreamUnready() {
+// 	s.mutex.Lock()
+// 	defer s.mutex.Unlock()
+// 	s.stream.Close()
+// 	s.stream = nil
+// }

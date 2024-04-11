@@ -1,9 +1,16 @@
 package main
 
 import (
+	config "SDAS/config"
 	handler "SDAS/handlers"
 	api "SDAS/kitex_gen/api"
+	expose "SDAS/services/expose_service"
 	"context"
+	"encoding/json"
+	"io"
+	"sync"
+
+	"github.com/cloudwego/kitex/pkg/klog"
 )
 
 // SDASImpl implements the last service interface defined in the IDL.
@@ -123,5 +130,134 @@ func (s *SDASImpl) RemovePipeline(ctx context.Context, req *api.RemovePipelineRe
 // ListPipeline implements the SDASImpl interface.
 func (s *SDASImpl) ListPipeline(ctx context.Context) (resp *api.ListPipelinesResponse, err error) {
 	// TODO: Your code here...
+	return
+}
+
+func (s *SDASImpl) PullExposeStream(stream api.SDAS_PullExposeStreamServer) (err error) {
+	// no need to call `stream.Close()` manually
+	var name string
+	var msgType string
+	wg := sync.WaitGroup{}
+	wg.Add(2)
+	// Recv
+	go func() {
+		defer func() {
+			// if p := recover(); p != nil {
+			// 	err = fmt.Errorf("panic: %v", p)
+			// }
+			wg.Done()
+		}()
+		for {
+
+			msg, recvErr := stream.Recv()
+			// make sure you receive and io.EOF or other non-nil error
+			// otherwise RPCFinish event will not be recorded
+			if recvErr == io.EOF {
+				handler.RemoveExposeHandler(name)
+				return
+			} else if recvErr != nil {
+				err = recvErr
+				return
+			}
+			var pull_expose config.EXPOSE_PULL
+			json.Unmarshal([]byte(msg.Expose.Content), &pull_expose)
+			if pull_expose.Op == expose.OPEN {
+				err := handler.AddExposeHandler(msg.Expose.Name, msg.Expose.Type, pull_expose.MsgType, msg.Expose.SourceName)
+				if err != nil {
+					resp := &api.PullExposeStreamResponse{
+						Code:    -1,
+						Message: err.Error(),
+						Data:    "",
+						Type:    pull_expose.MsgType,
+					}
+					if sendErr := stream.Send(resp); sendErr != nil {
+						err = sendErr
+						return
+					}
+				}
+				name = msg.Expose.Name
+				msgType = pull_expose.MsgType
+			} else if pull_expose.Op == expose.CLOSE {
+
+				if name != msg.Expose.Name {
+					resp := &api.PullExposeStreamResponse{
+						Code:    -1,
+						Message: "name not match",
+						Data:    "",
+						Type:    pull_expose.MsgType,
+					}
+					if sendErr := stream.Send(resp); sendErr != nil {
+						err = sendErr
+						return
+					}
+				}
+				handler.RemoveExposeHandler(msg.Expose.Name)
+			} else if pull_expose.Op == expose.PLAY {
+				err := handler.PlayExposePull(name)
+				if err != nil {
+					resp := &api.PullExposeStreamResponse{
+						Code:    -1,
+						Message: err.Error(),
+						Data:    "",
+						Type:    pull_expose.MsgType,
+					}
+					if sendErr := stream.Send(resp); sendErr != nil {
+						err = sendErr
+						return
+					}
+				}
+			} else if pull_expose.Op == expose.PAUSE {
+				klog.Debug("recv pause")
+				err := handler.PauseExposePull(name)
+				if err != nil {
+					resp := &api.PullExposeStreamResponse{
+						Code:    -1,
+						Message: err.Error(),
+						Data:    "",
+						Type:    pull_expose.MsgType,
+					}
+					if sendErr := stream.Send(resp); sendErr != nil {
+						err = sendErr
+						return
+					}
+				}
+			}
+		}
+	}()
+	// Send
+	go func() {
+		defer func() {
+			// if p := recover(); p != nil {
+			// 	err = fmt.Errorf("panic: %v", p)
+			// }
+			wg.Done()
+		}()
+		for {
+			if data, err := handler.GetExposePullData(name); err != nil {
+				resp := &api.PullExposeStreamResponse{
+					Code:    -1,
+					Message: err.Error(),
+					Data:    "",
+					Type:    msgType,
+				}
+				if sendErr := stream.Send(resp); sendErr != nil {
+					err = sendErr
+					return
+				}
+			} else {
+				resp := &api.PullExposeStreamResponse{
+					Code:    0,
+					Message: "data",
+					Data:    data,
+					Type:    msgType,
+				}
+				if sendErr := stream.Send(resp); sendErr != nil {
+					err = sendErr
+					return
+				}
+			}
+		}
+	}()
+	wg.Wait()
 	return
 }

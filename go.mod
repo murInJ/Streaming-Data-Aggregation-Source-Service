@@ -9,12 +9,15 @@ require (
 	github.com/apache/thrift v0.16.0
 	github.com/bluenviron/gortsplib/v4 v4.8.0
 	github.com/cloudwego/kitex v0.9.0
+	github.com/huandu/go-clone/generic v1.7.2
 	github.com/pion/rtp v1.8.5
+	gocv.io/x/gocv v0.36.1
 )
 
 require (
 	github.com/bluenviron/mediacommon v1.9.2 // indirect
 	github.com/google/uuid v1.6.0 // indirect
+	github.com/huandu/go-clone v1.6.0 // indirect
 	github.com/pion/randutil v0.1.0 // indirect
 	github.com/pion/rtcp v1.2.14 // indirect
 	github.com/pion/sdp/v3 v3.0.9 // indirect

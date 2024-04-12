@@ -3,7 +3,6 @@ package test
 import (
 	cli "SDAS/client"
 	"github.com/vmihailenco/msgpack/v5"
-	"gocv.io/x/gocv"
 	"image"
 	"io"
 	"testing"
@@ -48,8 +47,8 @@ func TestPullExpose(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	window := gocv.NewWindow("expose_pull_test")
-	window.ResizeWindow(512, 512)
+	//window := gocv.NewWindow("expose_pull_test")
+	//window.ResizeWindow(512, 512)
 
 	for i := 0; i < 100; i++ {
 		msg, err := c.RecvPullExposeStream()
@@ -67,17 +66,17 @@ func TestPullExpose(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		mat, err := gocv.ImageToMatRGB(&img)
-		if err != nil {
-			t.Fatal(err)
-		}
-		window.IMShow(mat)
-
-		window.WaitKey(1)
-		err = mat.Close()
-		if err != nil {
-			t.Fatal(err)
-		}
+		//mat, err := gocv.ImageToMatRGB(&img)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//window.IMShow(mat)
+		//
+		//window.WaitKey(1)
+		//err = mat.Close()
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
 
 	}
 

@@ -10,7 +10,6 @@ require (
 	github.com/cloudwego/kitex v0.9.0
 	github.com/pion/rtp v1.8.5
 	github.com/vmihailenco/msgpack/v5 v5.4.1
-	gocv.io/x/gocv v0.36.1
 )
 
 require (

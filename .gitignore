@@ -2,3 +2,5 @@
 *.log
 config.json
 /.VSCodeCounter
+/.idea
+/.idea/*

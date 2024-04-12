@@ -9,9 +9,10 @@ import (
 )
 
 type Source struct {
-	Type    string `thrift:"type,1" frugal:"1,default,string" json:"type"`
-	Name    string `thrift:"name,2" frugal:"2,default,string" json:"name"`
-	Content string `thrift:"content,3" frugal:"3,default,string" json:"content"`
+	Type    string            `thrift:"type,1" frugal:"1,default,string" json:"type"`
+	Name    string            `thrift:"name,2" frugal:"2,default,string" json:"name"`
+	Content map[string]string `thrift:"content,3" frugal:"3,default,map<string:string>" json:"content"`
+	Expose  bool              `thrift:"expose,4" frugal:"4,default,bool" json:"expose"`
 }
 
 func NewSource() *Source {
@@ -30,8 +31,12 @@ func (p *Source) GetName() (v string) {
 	return p.Name
 }
 
-func (p *Source) GetContent() (v string) {
+func (p *Source) GetContent() (v map[string]string) {
 	return p.Content
+}
+
+func (p *Source) GetExpose() (v bool) {
+	return p.Expose
 }
 func (p *Source) SetType(val string) {
 	p.Type = val
@@ -39,14 +44,18 @@ func (p *Source) SetType(val string) {
 func (p *Source) SetName(val string) {
 	p.Name = val
 }
-func (p *Source) SetContent(val string) {
+func (p *Source) SetContent(val map[string]string) {
 	p.Content = val
+}
+func (p *Source) SetExpose(val bool) {
+	p.Expose = val
 }
 
 var fieldIDToName_Source = map[int16]string{
 	1: "type",
 	2: "name",
 	3: "content",
+	4: "expose",
 }
 
 func (p *Source) Read(iprot thrift.TProtocol) (err error) {
@@ -85,8 +94,16 @@ func (p *Source) Read(iprot thrift.TProtocol) (err error) {
 				goto SkipFieldError
 			}
 		case 3:
-			if fieldTypeId == thrift.STRING {
+			if fieldTypeId == thrift.MAP {
 				if err = p.ReadField3(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		case 4:
+			if fieldTypeId == thrift.BOOL {
+				if err = p.ReadField4(iprot); err != nil {
 					goto ReadFieldError
 				}
 			} else if err = iprot.Skip(fieldTypeId); err != nil {
@@ -140,11 +157,39 @@ func (p *Source) ReadField2(iprot thrift.TProtocol) error {
 	return nil
 }
 func (p *Source) ReadField3(iprot thrift.TProtocol) error {
+	_, _, size, err := iprot.ReadMapBegin()
+	if err != nil {
+		return err
+	}
+	p.Content = make(map[string]string, size)
+	for i := 0; i < size; i++ {
+		var _key string
+		if v, err := iprot.ReadString(); err != nil {
+			return err
+		} else {
+			_key = v
+		}
 
-	if v, err := iprot.ReadString(); err != nil {
+		var _val string
+		if v, err := iprot.ReadString(); err != nil {
+			return err
+		} else {
+			_val = v
+		}
+
+		p.Content[_key] = _val
+	}
+	if err := iprot.ReadMapEnd(); err != nil {
+		return err
+	}
+	return nil
+}
+func (p *Source) ReadField4(iprot thrift.TProtocol) error {
+
+	if v, err := iprot.ReadBool(); err != nil {
 		return err
 	} else {
-		p.Content = v
+		p.Expose = v
 	}
 	return nil
 }
@@ -165,6 +210,10 @@ func (p *Source) Write(oprot thrift.TProtocol) (err error) {
 		}
 		if err = p.writeField3(oprot); err != nil {
 			fieldId = 3
+			goto WriteFieldError
+		}
+		if err = p.writeField4(oprot); err != nil {
+			fieldId = 4
 			goto WriteFieldError
 		}
 	}
@@ -220,10 +269,21 @@ WriteFieldEndError:
 }
 
 func (p *Source) writeField3(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("content", thrift.STRING, 3); err != nil {
+	if err = oprot.WriteFieldBegin("content", thrift.MAP, 3); err != nil {
 		goto WriteFieldBeginError
 	}
-	if err := oprot.WriteString(p.Content); err != nil {
+	if err := oprot.WriteMapBegin(thrift.STRING, thrift.STRING, len(p.Content)); err != nil {
+		return err
+	}
+	for k, v := range p.Content {
+		if err := oprot.WriteString(k); err != nil {
+			return err
+		}
+		if err := oprot.WriteString(v); err != nil {
+			return err
+		}
+	}
+	if err := oprot.WriteMapEnd(); err != nil {
 		return err
 	}
 	if err = oprot.WriteFieldEnd(); err != nil {
@@ -234,6 +294,23 @@ WriteFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 3 begin error: ", p), err)
 WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 3 end error: ", p), err)
+}
+
+func (p *Source) writeField4(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("expose", thrift.BOOL, 4); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := oprot.WriteBool(p.Expose); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 4 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 4 end error: ", p), err)
 }
 
 func (p *Source) String() string {
@@ -259,6 +336,9 @@ func (p *Source) DeepEqual(ano *Source) bool {
 	if !p.Field3DeepEqual(ano.Content) {
 		return false
 	}
+	if !p.Field4DeepEqual(ano.Expose) {
+		return false
+	}
 	return true
 }
 
@@ -276,9 +356,22 @@ func (p *Source) Field2DeepEqual(src string) bool {
 	}
 	return true
 }
-func (p *Source) Field3DeepEqual(src string) bool {
+func (p *Source) Field3DeepEqual(src map[string]string) bool {
 
-	if strings.Compare(p.Content, src) != 0 {
+	if len(p.Content) != len(src) {
+		return false
+	}
+	for k, v := range p.Content {
+		_src := src[k]
+		if strings.Compare(v, _src) != 0 {
+			return false
+		}
+	}
+	return true
+}
+func (p *Source) Field4DeepEqual(src bool) bool {
+
+	if p.Expose != src {
 		return false
 	}
 	return true

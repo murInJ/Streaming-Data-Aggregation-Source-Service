@@ -9,10 +9,10 @@ import (
 )
 
 type Expose struct {
-	Type       string `thrift:"type,1" frugal:"1,default,string" json:"type"`
-	Name       string `thrift:"name,2" frugal:"2,default,string" json:"name"`
-	Content    string `thrift:"content,3" frugal:"3,default,string" json:"content"`
-	SourceName string `thrift:"source_name,4" frugal:"4,default,string" json:"source_name"`
+	Type       string            `thrift:"type,1" frugal:"1,default,string" json:"type"`
+	Name       string            `thrift:"name,2" frugal:"2,default,string" json:"name"`
+	Content    map[string]string `thrift:"content,3" frugal:"3,default,map<string:string>" json:"content"`
+	SourceName string            `thrift:"source_name,4" frugal:"4,default,string" json:"source_name"`
 }
 
 func NewExpose() *Expose {
@@ -31,7 +31,7 @@ func (p *Expose) GetName() (v string) {
 	return p.Name
 }
 
-func (p *Expose) GetContent() (v string) {
+func (p *Expose) GetContent() (v map[string]string) {
 	return p.Content
 }
 
@@ -44,7 +44,7 @@ func (p *Expose) SetType(val string) {
 func (p *Expose) SetName(val string) {
 	p.Name = val
 }
-func (p *Expose) SetContent(val string) {
+func (p *Expose) SetContent(val map[string]string) {
 	p.Content = val
 }
 func (p *Expose) SetSourceName(val string) {
@@ -94,7 +94,7 @@ func (p *Expose) Read(iprot thrift.TProtocol) (err error) {
 				goto SkipFieldError
 			}
 		case 3:
-			if fieldTypeId == thrift.STRING {
+			if fieldTypeId == thrift.MAP {
 				if err = p.ReadField3(iprot); err != nil {
 					goto ReadFieldError
 				}
@@ -157,11 +157,30 @@ func (p *Expose) ReadField2(iprot thrift.TProtocol) error {
 	return nil
 }
 func (p *Expose) ReadField3(iprot thrift.TProtocol) error {
-
-	if v, err := iprot.ReadString(); err != nil {
+	_, _, size, err := iprot.ReadMapBegin()
+	if err != nil {
 		return err
-	} else {
-		p.Content = v
+	}
+	p.Content = make(map[string]string, size)
+	for i := 0; i < size; i++ {
+		var _key string
+		if v, err := iprot.ReadString(); err != nil {
+			return err
+		} else {
+			_key = v
+		}
+
+		var _val string
+		if v, err := iprot.ReadString(); err != nil {
+			return err
+		} else {
+			_val = v
+		}
+
+		p.Content[_key] = _val
+	}
+	if err := iprot.ReadMapEnd(); err != nil {
+		return err
 	}
 	return nil
 }
@@ -250,10 +269,21 @@ WriteFieldEndError:
 }
 
 func (p *Expose) writeField3(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("content", thrift.STRING, 3); err != nil {
+	if err = oprot.WriteFieldBegin("content", thrift.MAP, 3); err != nil {
 		goto WriteFieldBeginError
 	}
-	if err := oprot.WriteString(p.Content); err != nil {
+	if err := oprot.WriteMapBegin(thrift.STRING, thrift.STRING, len(p.Content)); err != nil {
+		return err
+	}
+	for k, v := range p.Content {
+		if err := oprot.WriteString(k); err != nil {
+			return err
+		}
+		if err := oprot.WriteString(v); err != nil {
+			return err
+		}
+	}
+	if err := oprot.WriteMapEnd(); err != nil {
 		return err
 	}
 	if err = oprot.WriteFieldEnd(); err != nil {
@@ -326,785 +356,22 @@ func (p *Expose) Field2DeepEqual(src string) bool {
 	}
 	return true
 }
-func (p *Expose) Field3DeepEqual(src string) bool {
+func (p *Expose) Field3DeepEqual(src map[string]string) bool {
 
-	if strings.Compare(p.Content, src) != 0 {
+	if len(p.Content) != len(src) {
 		return false
+	}
+	for k, v := range p.Content {
+		_src := src[k]
+		if strings.Compare(v, _src) != 0 {
+			return false
+		}
 	}
 	return true
 }
 func (p *Expose) Field4DeepEqual(src string) bool {
 
 	if strings.Compare(p.SourceName, src) != 0 {
-		return false
-	}
-	return true
-}
-
-type AddExposeRequest struct {
-	Expose *Expose `thrift:"expose,1" frugal:"1,default,Expose" json:"expose"`
-}
-
-func NewAddExposeRequest() *AddExposeRequest {
-	return &AddExposeRequest{}
-}
-
-func (p *AddExposeRequest) InitDefault() {
-	*p = AddExposeRequest{}
-}
-
-var AddExposeRequest_Expose_DEFAULT *Expose
-
-func (p *AddExposeRequest) GetExpose() (v *Expose) {
-	if !p.IsSetExpose() {
-		return AddExposeRequest_Expose_DEFAULT
-	}
-	return p.Expose
-}
-func (p *AddExposeRequest) SetExpose(val *Expose) {
-	p.Expose = val
-}
-
-var fieldIDToName_AddExposeRequest = map[int16]string{
-	1: "expose",
-}
-
-func (p *AddExposeRequest) IsSetExpose() bool {
-	return p.Expose != nil
-}
-
-func (p *AddExposeRequest) Read(iprot thrift.TProtocol) (err error) {
-
-	var fieldTypeId thrift.TType
-	var fieldId int16
-
-	if _, err = iprot.ReadStructBegin(); err != nil {
-		goto ReadStructBeginError
-	}
-
-	for {
-		_, fieldTypeId, fieldId, err = iprot.ReadFieldBegin()
-		if err != nil {
-			goto ReadFieldBeginError
-		}
-		if fieldTypeId == thrift.STOP {
-			break
-		}
-
-		switch fieldId {
-		case 1:
-			if fieldTypeId == thrift.STRUCT {
-				if err = p.ReadField1(iprot); err != nil {
-					goto ReadFieldError
-				}
-			} else if err = iprot.Skip(fieldTypeId); err != nil {
-				goto SkipFieldError
-			}
-		default:
-			if err = iprot.Skip(fieldTypeId); err != nil {
-				goto SkipFieldError
-			}
-		}
-		if err = iprot.ReadFieldEnd(); err != nil {
-			goto ReadFieldEndError
-		}
-	}
-	if err = iprot.ReadStructEnd(); err != nil {
-		goto ReadStructEndError
-	}
-
-	return nil
-ReadStructBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
-ReadFieldBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
-ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_AddExposeRequest[fieldId]), err)
-SkipFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
-
-ReadFieldEndError:
-	return thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
-ReadStructEndError:
-	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
-}
-
-func (p *AddExposeRequest) ReadField1(iprot thrift.TProtocol) error {
-	p.Expose = NewExpose()
-	if err := p.Expose.Read(iprot); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (p *AddExposeRequest) Write(oprot thrift.TProtocol) (err error) {
-	var fieldId int16
-	if err = oprot.WriteStructBegin("AddExposeRequest"); err != nil {
-		goto WriteStructBeginError
-	}
-	if p != nil {
-		if err = p.writeField1(oprot); err != nil {
-			fieldId = 1
-			goto WriteFieldError
-		}
-	}
-	if err = oprot.WriteFieldStop(); err != nil {
-		goto WriteFieldStopError
-	}
-	if err = oprot.WriteStructEnd(); err != nil {
-		goto WriteStructEndError
-	}
-	return nil
-WriteStructBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err)
-WriteFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T write field %d error: ", p, fieldId), err)
-WriteFieldStopError:
-	return thrift.PrependError(fmt.Sprintf("%T write field stop error: ", p), err)
-WriteStructEndError:
-	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
-}
-
-func (p *AddExposeRequest) writeField1(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("expose", thrift.STRUCT, 1); err != nil {
-		goto WriteFieldBeginError
-	}
-	if err := p.Expose.Write(oprot); err != nil {
-		return err
-	}
-	if err = oprot.WriteFieldEnd(); err != nil {
-		goto WriteFieldEndError
-	}
-	return nil
-WriteFieldBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 1 begin error: ", p), err)
-WriteFieldEndError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
-}
-
-func (p *AddExposeRequest) String() string {
-	if p == nil {
-		return "<nil>"
-	}
-	return fmt.Sprintf("AddExposeRequest(%+v)", *p)
-
-}
-
-func (p *AddExposeRequest) DeepEqual(ano *AddExposeRequest) bool {
-	if p == ano {
-		return true
-	} else if p == nil || ano == nil {
-		return false
-	}
-	if !p.Field1DeepEqual(ano.Expose) {
-		return false
-	}
-	return true
-}
-
-func (p *AddExposeRequest) Field1DeepEqual(src *Expose) bool {
-
-	if !p.Expose.DeepEqual(src) {
-		return false
-	}
-	return true
-}
-
-type AddExposeResponse struct {
-	Message string `thrift:"message,1" frugal:"1,default,string" json:"message"`
-	Code    int32  `thrift:"code,2" frugal:"2,default,i32" json:"code"`
-}
-
-func NewAddExposeResponse() *AddExposeResponse {
-	return &AddExposeResponse{}
-}
-
-func (p *AddExposeResponse) InitDefault() {
-	*p = AddExposeResponse{}
-}
-
-func (p *AddExposeResponse) GetMessage() (v string) {
-	return p.Message
-}
-
-func (p *AddExposeResponse) GetCode() (v int32) {
-	return p.Code
-}
-func (p *AddExposeResponse) SetMessage(val string) {
-	p.Message = val
-}
-func (p *AddExposeResponse) SetCode(val int32) {
-	p.Code = val
-}
-
-var fieldIDToName_AddExposeResponse = map[int16]string{
-	1: "message",
-	2: "code",
-}
-
-func (p *AddExposeResponse) Read(iprot thrift.TProtocol) (err error) {
-
-	var fieldTypeId thrift.TType
-	var fieldId int16
-
-	if _, err = iprot.ReadStructBegin(); err != nil {
-		goto ReadStructBeginError
-	}
-
-	for {
-		_, fieldTypeId, fieldId, err = iprot.ReadFieldBegin()
-		if err != nil {
-			goto ReadFieldBeginError
-		}
-		if fieldTypeId == thrift.STOP {
-			break
-		}
-
-		switch fieldId {
-		case 1:
-			if fieldTypeId == thrift.STRING {
-				if err = p.ReadField1(iprot); err != nil {
-					goto ReadFieldError
-				}
-			} else if err = iprot.Skip(fieldTypeId); err != nil {
-				goto SkipFieldError
-			}
-		case 2:
-			if fieldTypeId == thrift.I32 {
-				if err = p.ReadField2(iprot); err != nil {
-					goto ReadFieldError
-				}
-			} else if err = iprot.Skip(fieldTypeId); err != nil {
-				goto SkipFieldError
-			}
-		default:
-			if err = iprot.Skip(fieldTypeId); err != nil {
-				goto SkipFieldError
-			}
-		}
-		if err = iprot.ReadFieldEnd(); err != nil {
-			goto ReadFieldEndError
-		}
-	}
-	if err = iprot.ReadStructEnd(); err != nil {
-		goto ReadStructEndError
-	}
-
-	return nil
-ReadStructBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
-ReadFieldBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
-ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_AddExposeResponse[fieldId]), err)
-SkipFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
-
-ReadFieldEndError:
-	return thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
-ReadStructEndError:
-	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
-}
-
-func (p *AddExposeResponse) ReadField1(iprot thrift.TProtocol) error {
-
-	if v, err := iprot.ReadString(); err != nil {
-		return err
-	} else {
-		p.Message = v
-	}
-	return nil
-}
-func (p *AddExposeResponse) ReadField2(iprot thrift.TProtocol) error {
-
-	if v, err := iprot.ReadI32(); err != nil {
-		return err
-	} else {
-		p.Code = v
-	}
-	return nil
-}
-
-func (p *AddExposeResponse) Write(oprot thrift.TProtocol) (err error) {
-	var fieldId int16
-	if err = oprot.WriteStructBegin("AddExposeResponse"); err != nil {
-		goto WriteStructBeginError
-	}
-	if p != nil {
-		if err = p.writeField1(oprot); err != nil {
-			fieldId = 1
-			goto WriteFieldError
-		}
-		if err = p.writeField2(oprot); err != nil {
-			fieldId = 2
-			goto WriteFieldError
-		}
-	}
-	if err = oprot.WriteFieldStop(); err != nil {
-		goto WriteFieldStopError
-	}
-	if err = oprot.WriteStructEnd(); err != nil {
-		goto WriteStructEndError
-	}
-	return nil
-WriteStructBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err)
-WriteFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T write field %d error: ", p, fieldId), err)
-WriteFieldStopError:
-	return thrift.PrependError(fmt.Sprintf("%T write field stop error: ", p), err)
-WriteStructEndError:
-	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
-}
-
-func (p *AddExposeResponse) writeField1(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("message", thrift.STRING, 1); err != nil {
-		goto WriteFieldBeginError
-	}
-	if err := oprot.WriteString(p.Message); err != nil {
-		return err
-	}
-	if err = oprot.WriteFieldEnd(); err != nil {
-		goto WriteFieldEndError
-	}
-	return nil
-WriteFieldBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 1 begin error: ", p), err)
-WriteFieldEndError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
-}
-
-func (p *AddExposeResponse) writeField2(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("code", thrift.I32, 2); err != nil {
-		goto WriteFieldBeginError
-	}
-	if err := oprot.WriteI32(p.Code); err != nil {
-		return err
-	}
-	if err = oprot.WriteFieldEnd(); err != nil {
-		goto WriteFieldEndError
-	}
-	return nil
-WriteFieldBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 2 begin error: ", p), err)
-WriteFieldEndError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 2 end error: ", p), err)
-}
-
-func (p *AddExposeResponse) String() string {
-	if p == nil {
-		return "<nil>"
-	}
-	return fmt.Sprintf("AddExposeResponse(%+v)", *p)
-
-}
-
-func (p *AddExposeResponse) DeepEqual(ano *AddExposeResponse) bool {
-	if p == ano {
-		return true
-	} else if p == nil || ano == nil {
-		return false
-	}
-	if !p.Field1DeepEqual(ano.Message) {
-		return false
-	}
-	if !p.Field2DeepEqual(ano.Code) {
-		return false
-	}
-	return true
-}
-
-func (p *AddExposeResponse) Field1DeepEqual(src string) bool {
-
-	if strings.Compare(p.Message, src) != 0 {
-		return false
-	}
-	return true
-}
-func (p *AddExposeResponse) Field2DeepEqual(src int32) bool {
-
-	if p.Code != src {
-		return false
-	}
-	return true
-}
-
-type RemoveExposeRequest struct {
-	Name string `thrift:"name,1" frugal:"1,default,string" json:"name"`
-}
-
-func NewRemoveExposeRequest() *RemoveExposeRequest {
-	return &RemoveExposeRequest{}
-}
-
-func (p *RemoveExposeRequest) InitDefault() {
-	*p = RemoveExposeRequest{}
-}
-
-func (p *RemoveExposeRequest) GetName() (v string) {
-	return p.Name
-}
-func (p *RemoveExposeRequest) SetName(val string) {
-	p.Name = val
-}
-
-var fieldIDToName_RemoveExposeRequest = map[int16]string{
-	1: "name",
-}
-
-func (p *RemoveExposeRequest) Read(iprot thrift.TProtocol) (err error) {
-
-	var fieldTypeId thrift.TType
-	var fieldId int16
-
-	if _, err = iprot.ReadStructBegin(); err != nil {
-		goto ReadStructBeginError
-	}
-
-	for {
-		_, fieldTypeId, fieldId, err = iprot.ReadFieldBegin()
-		if err != nil {
-			goto ReadFieldBeginError
-		}
-		if fieldTypeId == thrift.STOP {
-			break
-		}
-
-		switch fieldId {
-		case 1:
-			if fieldTypeId == thrift.STRING {
-				if err = p.ReadField1(iprot); err != nil {
-					goto ReadFieldError
-				}
-			} else if err = iprot.Skip(fieldTypeId); err != nil {
-				goto SkipFieldError
-			}
-		default:
-			if err = iprot.Skip(fieldTypeId); err != nil {
-				goto SkipFieldError
-			}
-		}
-		if err = iprot.ReadFieldEnd(); err != nil {
-			goto ReadFieldEndError
-		}
-	}
-	if err = iprot.ReadStructEnd(); err != nil {
-		goto ReadStructEndError
-	}
-
-	return nil
-ReadStructBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
-ReadFieldBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
-ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_RemoveExposeRequest[fieldId]), err)
-SkipFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
-
-ReadFieldEndError:
-	return thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
-ReadStructEndError:
-	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
-}
-
-func (p *RemoveExposeRequest) ReadField1(iprot thrift.TProtocol) error {
-
-	if v, err := iprot.ReadString(); err != nil {
-		return err
-	} else {
-		p.Name = v
-	}
-	return nil
-}
-
-func (p *RemoveExposeRequest) Write(oprot thrift.TProtocol) (err error) {
-	var fieldId int16
-	if err = oprot.WriteStructBegin("RemoveExposeRequest"); err != nil {
-		goto WriteStructBeginError
-	}
-	if p != nil {
-		if err = p.writeField1(oprot); err != nil {
-			fieldId = 1
-			goto WriteFieldError
-		}
-	}
-	if err = oprot.WriteFieldStop(); err != nil {
-		goto WriteFieldStopError
-	}
-	if err = oprot.WriteStructEnd(); err != nil {
-		goto WriteStructEndError
-	}
-	return nil
-WriteStructBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err)
-WriteFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T write field %d error: ", p, fieldId), err)
-WriteFieldStopError:
-	return thrift.PrependError(fmt.Sprintf("%T write field stop error: ", p), err)
-WriteStructEndError:
-	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
-}
-
-func (p *RemoveExposeRequest) writeField1(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("name", thrift.STRING, 1); err != nil {
-		goto WriteFieldBeginError
-	}
-	if err := oprot.WriteString(p.Name); err != nil {
-		return err
-	}
-	if err = oprot.WriteFieldEnd(); err != nil {
-		goto WriteFieldEndError
-	}
-	return nil
-WriteFieldBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 1 begin error: ", p), err)
-WriteFieldEndError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
-}
-
-func (p *RemoveExposeRequest) String() string {
-	if p == nil {
-		return "<nil>"
-	}
-	return fmt.Sprintf("RemoveExposeRequest(%+v)", *p)
-
-}
-
-func (p *RemoveExposeRequest) DeepEqual(ano *RemoveExposeRequest) bool {
-	if p == ano {
-		return true
-	} else if p == nil || ano == nil {
-		return false
-	}
-	if !p.Field1DeepEqual(ano.Name) {
-		return false
-	}
-	return true
-}
-
-func (p *RemoveExposeRequest) Field1DeepEqual(src string) bool {
-
-	if strings.Compare(p.Name, src) != 0 {
-		return false
-	}
-	return true
-}
-
-type RemoveExposeResponse struct {
-	Message string `thrift:"message,1" frugal:"1,default,string" json:"message"`
-	Code    int32  `thrift:"code,2" frugal:"2,default,i32" json:"code"`
-}
-
-func NewRemoveExposeResponse() *RemoveExposeResponse {
-	return &RemoveExposeResponse{}
-}
-
-func (p *RemoveExposeResponse) InitDefault() {
-	*p = RemoveExposeResponse{}
-}
-
-func (p *RemoveExposeResponse) GetMessage() (v string) {
-	return p.Message
-}
-
-func (p *RemoveExposeResponse) GetCode() (v int32) {
-	return p.Code
-}
-func (p *RemoveExposeResponse) SetMessage(val string) {
-	p.Message = val
-}
-func (p *RemoveExposeResponse) SetCode(val int32) {
-	p.Code = val
-}
-
-var fieldIDToName_RemoveExposeResponse = map[int16]string{
-	1: "message",
-	2: "code",
-}
-
-func (p *RemoveExposeResponse) Read(iprot thrift.TProtocol) (err error) {
-
-	var fieldTypeId thrift.TType
-	var fieldId int16
-
-	if _, err = iprot.ReadStructBegin(); err != nil {
-		goto ReadStructBeginError
-	}
-
-	for {
-		_, fieldTypeId, fieldId, err = iprot.ReadFieldBegin()
-		if err != nil {
-			goto ReadFieldBeginError
-		}
-		if fieldTypeId == thrift.STOP {
-			break
-		}
-
-		switch fieldId {
-		case 1:
-			if fieldTypeId == thrift.STRING {
-				if err = p.ReadField1(iprot); err != nil {
-					goto ReadFieldError
-				}
-			} else if err = iprot.Skip(fieldTypeId); err != nil {
-				goto SkipFieldError
-			}
-		case 2:
-			if fieldTypeId == thrift.I32 {
-				if err = p.ReadField2(iprot); err != nil {
-					goto ReadFieldError
-				}
-			} else if err = iprot.Skip(fieldTypeId); err != nil {
-				goto SkipFieldError
-			}
-		default:
-			if err = iprot.Skip(fieldTypeId); err != nil {
-				goto SkipFieldError
-			}
-		}
-		if err = iprot.ReadFieldEnd(); err != nil {
-			goto ReadFieldEndError
-		}
-	}
-	if err = iprot.ReadStructEnd(); err != nil {
-		goto ReadStructEndError
-	}
-
-	return nil
-ReadStructBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
-ReadFieldBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
-ReadFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_RemoveExposeResponse[fieldId]), err)
-SkipFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
-
-ReadFieldEndError:
-	return thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
-ReadStructEndError:
-	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
-}
-
-func (p *RemoveExposeResponse) ReadField1(iprot thrift.TProtocol) error {
-
-	if v, err := iprot.ReadString(); err != nil {
-		return err
-	} else {
-		p.Message = v
-	}
-	return nil
-}
-func (p *RemoveExposeResponse) ReadField2(iprot thrift.TProtocol) error {
-
-	if v, err := iprot.ReadI32(); err != nil {
-		return err
-	} else {
-		p.Code = v
-	}
-	return nil
-}
-
-func (p *RemoveExposeResponse) Write(oprot thrift.TProtocol) (err error) {
-	var fieldId int16
-	if err = oprot.WriteStructBegin("RemoveExposeResponse"); err != nil {
-		goto WriteStructBeginError
-	}
-	if p != nil {
-		if err = p.writeField1(oprot); err != nil {
-			fieldId = 1
-			goto WriteFieldError
-		}
-		if err = p.writeField2(oprot); err != nil {
-			fieldId = 2
-			goto WriteFieldError
-		}
-	}
-	if err = oprot.WriteFieldStop(); err != nil {
-		goto WriteFieldStopError
-	}
-	if err = oprot.WriteStructEnd(); err != nil {
-		goto WriteStructEndError
-	}
-	return nil
-WriteStructBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err)
-WriteFieldError:
-	return thrift.PrependError(fmt.Sprintf("%T write field %d error: ", p, fieldId), err)
-WriteFieldStopError:
-	return thrift.PrependError(fmt.Sprintf("%T write field stop error: ", p), err)
-WriteStructEndError:
-	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
-}
-
-func (p *RemoveExposeResponse) writeField1(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("message", thrift.STRING, 1); err != nil {
-		goto WriteFieldBeginError
-	}
-	if err := oprot.WriteString(p.Message); err != nil {
-		return err
-	}
-	if err = oprot.WriteFieldEnd(); err != nil {
-		goto WriteFieldEndError
-	}
-	return nil
-WriteFieldBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 1 begin error: ", p), err)
-WriteFieldEndError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
-}
-
-func (p *RemoveExposeResponse) writeField2(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("code", thrift.I32, 2); err != nil {
-		goto WriteFieldBeginError
-	}
-	if err := oprot.WriteI32(p.Code); err != nil {
-		return err
-	}
-	if err = oprot.WriteFieldEnd(); err != nil {
-		goto WriteFieldEndError
-	}
-	return nil
-WriteFieldBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 2 begin error: ", p), err)
-WriteFieldEndError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 2 end error: ", p), err)
-}
-
-func (p *RemoveExposeResponse) String() string {
-	if p == nil {
-		return "<nil>"
-	}
-	return fmt.Sprintf("RemoveExposeResponse(%+v)", *p)
-
-}
-
-func (p *RemoveExposeResponse) DeepEqual(ano *RemoveExposeResponse) bool {
-	if p == ano {
-		return true
-	} else if p == nil || ano == nil {
-		return false
-	}
-	if !p.Field1DeepEqual(ano.Message) {
-		return false
-	}
-	if !p.Field2DeepEqual(ano.Code) {
-		return false
-	}
-	return true
-}
-
-func (p *RemoveExposeResponse) Field1DeepEqual(src string) bool {
-
-	if strings.Compare(p.Message, src) != 0 {
-		return false
-	}
-	return true
-}
-func (p *RemoveExposeResponse) Field2DeepEqual(src int32) bool {
-
-	if p.Code != src {
 		return false
 	}
 	return true
@@ -1580,10 +847,9 @@ func (p *PullExposeStreamRequest) Field1DeepEqual(src *Expose) bool {
 }
 
 type PullExposeStreamResponse struct {
-	Message string `thrift:"message,1" frugal:"1,default,string" json:"message"`
-	Code    int32  `thrift:"code,2" frugal:"2,default,i32" json:"code"`
-	Data    string `thrift:"data,3" frugal:"3,default,string" json:"data"`
-	Type    string `thrift:"type,4" frugal:"4,default,string" json:"type"`
+	Message   string     `thrift:"message,1" frugal:"1,default,string" json:"message"`
+	Code      int32      `thrift:"code,2" frugal:"2,default,i32" json:"code"`
+	SourceMsg *SourceMsg `thrift:"source_msg,3" frugal:"3,default,SourceMsg" json:"source_msg"`
 }
 
 func NewPullExposeStreamResponse() *PullExposeStreamResponse {
@@ -1602,12 +868,13 @@ func (p *PullExposeStreamResponse) GetCode() (v int32) {
 	return p.Code
 }
 
-func (p *PullExposeStreamResponse) GetData() (v string) {
-	return p.Data
-}
+var PullExposeStreamResponse_SourceMsg_DEFAULT *SourceMsg
 
-func (p *PullExposeStreamResponse) GetType() (v string) {
-	return p.Type
+func (p *PullExposeStreamResponse) GetSourceMsg() (v *SourceMsg) {
+	if !p.IsSetSourceMsg() {
+		return PullExposeStreamResponse_SourceMsg_DEFAULT
+	}
+	return p.SourceMsg
 }
 func (p *PullExposeStreamResponse) SetMessage(val string) {
 	p.Message = val
@@ -1615,18 +882,18 @@ func (p *PullExposeStreamResponse) SetMessage(val string) {
 func (p *PullExposeStreamResponse) SetCode(val int32) {
 	p.Code = val
 }
-func (p *PullExposeStreamResponse) SetData(val string) {
-	p.Data = val
-}
-func (p *PullExposeStreamResponse) SetType(val string) {
-	p.Type = val
+func (p *PullExposeStreamResponse) SetSourceMsg(val *SourceMsg) {
+	p.SourceMsg = val
 }
 
 var fieldIDToName_PullExposeStreamResponse = map[int16]string{
 	1: "message",
 	2: "code",
-	3: "data",
-	4: "type",
+	3: "source_msg",
+}
+
+func (p *PullExposeStreamResponse) IsSetSourceMsg() bool {
+	return p.SourceMsg != nil
 }
 
 func (p *PullExposeStreamResponse) Read(iprot thrift.TProtocol) (err error) {
@@ -1665,16 +932,8 @@ func (p *PullExposeStreamResponse) Read(iprot thrift.TProtocol) (err error) {
 				goto SkipFieldError
 			}
 		case 3:
-			if fieldTypeId == thrift.STRING {
+			if fieldTypeId == thrift.STRUCT {
 				if err = p.ReadField3(iprot); err != nil {
-					goto ReadFieldError
-				}
-			} else if err = iprot.Skip(fieldTypeId); err != nil {
-				goto SkipFieldError
-			}
-		case 4:
-			if fieldTypeId == thrift.STRING {
-				if err = p.ReadField4(iprot); err != nil {
 					goto ReadFieldError
 				}
 			} else if err = iprot.Skip(fieldTypeId); err != nil {
@@ -1728,20 +987,9 @@ func (p *PullExposeStreamResponse) ReadField2(iprot thrift.TProtocol) error {
 	return nil
 }
 func (p *PullExposeStreamResponse) ReadField3(iprot thrift.TProtocol) error {
-
-	if v, err := iprot.ReadString(); err != nil {
+	p.SourceMsg = NewSourceMsg()
+	if err := p.SourceMsg.Read(iprot); err != nil {
 		return err
-	} else {
-		p.Data = v
-	}
-	return nil
-}
-func (p *PullExposeStreamResponse) ReadField4(iprot thrift.TProtocol) error {
-
-	if v, err := iprot.ReadString(); err != nil {
-		return err
-	} else {
-		p.Type = v
 	}
 	return nil
 }
@@ -1762,10 +1010,6 @@ func (p *PullExposeStreamResponse) Write(oprot thrift.TProtocol) (err error) {
 		}
 		if err = p.writeField3(oprot); err != nil {
 			fieldId = 3
-			goto WriteFieldError
-		}
-		if err = p.writeField4(oprot); err != nil {
-			fieldId = 4
 			goto WriteFieldError
 		}
 	}
@@ -1821,10 +1065,10 @@ WriteFieldEndError:
 }
 
 func (p *PullExposeStreamResponse) writeField3(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("data", thrift.STRING, 3); err != nil {
+	if err = oprot.WriteFieldBegin("source_msg", thrift.STRUCT, 3); err != nil {
 		goto WriteFieldBeginError
 	}
-	if err := oprot.WriteString(p.Data); err != nil {
+	if err := p.SourceMsg.Write(oprot); err != nil {
 		return err
 	}
 	if err = oprot.WriteFieldEnd(); err != nil {
@@ -1835,23 +1079,6 @@ WriteFieldBeginError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 3 begin error: ", p), err)
 WriteFieldEndError:
 	return thrift.PrependError(fmt.Sprintf("%T write field 3 end error: ", p), err)
-}
-
-func (p *PullExposeStreamResponse) writeField4(oprot thrift.TProtocol) (err error) {
-	if err = oprot.WriteFieldBegin("type", thrift.STRING, 4); err != nil {
-		goto WriteFieldBeginError
-	}
-	if err := oprot.WriteString(p.Type); err != nil {
-		return err
-	}
-	if err = oprot.WriteFieldEnd(); err != nil {
-		goto WriteFieldEndError
-	}
-	return nil
-WriteFieldBeginError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 4 begin error: ", p), err)
-WriteFieldEndError:
-	return thrift.PrependError(fmt.Sprintf("%T write field 4 end error: ", p), err)
 }
 
 func (p *PullExposeStreamResponse) String() string {
@@ -1874,10 +1101,7 @@ func (p *PullExposeStreamResponse) DeepEqual(ano *PullExposeStreamResponse) bool
 	if !p.Field2DeepEqual(ano.Code) {
 		return false
 	}
-	if !p.Field3DeepEqual(ano.Data) {
-		return false
-	}
-	if !p.Field4DeepEqual(ano.Type) {
+	if !p.Field3DeepEqual(ano.SourceMsg) {
 		return false
 	}
 	return true
@@ -1897,16 +1121,9 @@ func (p *PullExposeStreamResponse) Field2DeepEqual(src int32) bool {
 	}
 	return true
 }
-func (p *PullExposeStreamResponse) Field3DeepEqual(src string) bool {
+func (p *PullExposeStreamResponse) Field3DeepEqual(src *SourceMsg) bool {
 
-	if strings.Compare(p.Data, src) != 0 {
-		return false
-	}
-	return true
-}
-func (p *PullExposeStreamResponse) Field4DeepEqual(src string) bool {
-
-	if strings.Compare(p.Type, src) != 0 {
+	if !p.SourceMsg.DeepEqual(src) {
 		return false
 	}
 	return true

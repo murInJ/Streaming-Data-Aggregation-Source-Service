@@ -9,20 +9,22 @@ import (
 	"github.com/cloudwego/kitex/pkg/klog"
 )
 
+var (
+	OPEN  = 0
+	PLAY  = 1
+	PAUSE = 2
+	CLOSE = 3
+	ERR   = 4
+)
+
 type Config struct {
-	Sources   []SOURCE   `json:"sources"`
-	Exposes   []EXPOSE   `json:"exposes"`
-	Pipelines []PIPELINE `json:"pipelines"`
-	Server    SERVER     `json:"server"`
+	Server SERVER `json:"server"`
 }
 
 var Conf *Config
 
 func NewDefaultConfig() {
 	Conf = &Config{
-		Sources:   []SOURCE{},
-		Exposes:   []EXPOSE{},
-		Pipelines: []PIPELINE{},
 		Server: SERVER{
 			Node: "test_sdas",
 			Host: "0.0.0.0",

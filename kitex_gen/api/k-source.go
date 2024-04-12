@@ -74,8 +74,22 @@ func (p *Source) FastRead(buf []byte) (int, error) {
 				}
 			}
 		case 3:
-			if fieldTypeId == thrift.STRING {
+			if fieldTypeId == thrift.MAP {
 				l, err = p.FastReadField3(buf[offset:])
+				offset += l
+				if err != nil {
+					goto ReadFieldError
+				}
+			} else {
+				l, err = bthrift.Binary.Skip(buf[offset:], fieldTypeId)
+				offset += l
+				if err != nil {
+					goto SkipFieldError
+				}
+			}
+		case 4:
+			if fieldTypeId == thrift.BOOL {
+				l, err = p.FastReadField4(buf[offset:])
 				offset += l
 				if err != nil {
 					goto ReadFieldError
@@ -153,12 +167,52 @@ func (p *Source) FastReadField2(buf []byte) (int, error) {
 func (p *Source) FastReadField3(buf []byte) (int, error) {
 	offset := 0
 
-	if v, l, err := bthrift.Binary.ReadString(buf[offset:]); err != nil {
+	_, _, size, l, err := bthrift.Binary.ReadMapBegin(buf[offset:])
+	offset += l
+	if err != nil {
+		return offset, err
+	}
+	p.Content = make(map[string]string, size)
+	for i := 0; i < size; i++ {
+		var _key string
+		if v, l, err := bthrift.Binary.ReadString(buf[offset:]); err != nil {
+			return offset, err
+		} else {
+			offset += l
+
+			_key = v
+
+		}
+
+		var _val string
+		if v, l, err := bthrift.Binary.ReadString(buf[offset:]); err != nil {
+			return offset, err
+		} else {
+			offset += l
+
+			_val = v
+
+		}
+
+		p.Content[_key] = _val
+	}
+	if l, err := bthrift.Binary.ReadMapEnd(buf[offset:]); err != nil {
+		return offset, err
+	} else {
+		offset += l
+	}
+	return offset, nil
+}
+
+func (p *Source) FastReadField4(buf []byte) (int, error) {
+	offset := 0
+
+	if v, l, err := bthrift.Binary.ReadBool(buf[offset:]); err != nil {
 		return offset, err
 	} else {
 		offset += l
 
-		p.Content = v
+		p.Expose = v
 
 	}
 	return offset, nil
@@ -173,6 +227,7 @@ func (p *Source) FastWriteNocopy(buf []byte, binaryWriter bthrift.BinaryWriter) 
 	offset := 0
 	offset += bthrift.Binary.WriteStructBegin(buf[offset:], "Source")
 	if p != nil {
+		offset += p.fastWriteField4(buf[offset:], binaryWriter)
 		offset += p.fastWriteField1(buf[offset:], binaryWriter)
 		offset += p.fastWriteField2(buf[offset:], binaryWriter)
 		offset += p.fastWriteField3(buf[offset:], binaryWriter)
@@ -189,6 +244,7 @@ func (p *Source) BLength() int {
 		l += p.field1Length()
 		l += p.field2Length()
 		l += p.field3Length()
+		l += p.field4Length()
 	}
 	l += bthrift.Binary.FieldStopLength()
 	l += bthrift.Binary.StructEndLength()
@@ -215,8 +271,28 @@ func (p *Source) fastWriteField2(buf []byte, binaryWriter bthrift.BinaryWriter) 
 
 func (p *Source) fastWriteField3(buf []byte, binaryWriter bthrift.BinaryWriter) int {
 	offset := 0
-	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "content", thrift.STRING, 3)
-	offset += bthrift.Binary.WriteStringNocopy(buf[offset:], binaryWriter, p.Content)
+	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "content", thrift.MAP, 3)
+	mapBeginOffset := offset
+	offset += bthrift.Binary.MapBeginLength(thrift.STRING, thrift.STRING, 0)
+	var length int
+	for k, v := range p.Content {
+		length++
+
+		offset += bthrift.Binary.WriteStringNocopy(buf[offset:], binaryWriter, k)
+
+		offset += bthrift.Binary.WriteStringNocopy(buf[offset:], binaryWriter, v)
+
+	}
+	bthrift.Binary.WriteMapBegin(buf[mapBeginOffset:], thrift.STRING, thrift.STRING, length)
+	offset += bthrift.Binary.WriteMapEnd(buf[offset:])
+	offset += bthrift.Binary.WriteFieldEnd(buf[offset:])
+	return offset
+}
+
+func (p *Source) fastWriteField4(buf []byte, binaryWriter bthrift.BinaryWriter) int {
+	offset := 0
+	offset += bthrift.Binary.WriteFieldBegin(buf[offset:], "expose", thrift.BOOL, 4)
+	offset += bthrift.Binary.WriteBool(buf[offset:], p.Expose)
 
 	offset += bthrift.Binary.WriteFieldEnd(buf[offset:])
 	return offset
@@ -242,8 +318,24 @@ func (p *Source) field2Length() int {
 
 func (p *Source) field3Length() int {
 	l := 0
-	l += bthrift.Binary.FieldBeginLength("content", thrift.STRING, 3)
-	l += bthrift.Binary.StringLengthNocopy(p.Content)
+	l += bthrift.Binary.FieldBeginLength("content", thrift.MAP, 3)
+	l += bthrift.Binary.MapBeginLength(thrift.STRING, thrift.STRING, len(p.Content))
+	for k, v := range p.Content {
+
+		l += bthrift.Binary.StringLengthNocopy(k)
+
+		l += bthrift.Binary.StringLengthNocopy(v)
+
+	}
+	l += bthrift.Binary.MapEndLength()
+	l += bthrift.Binary.FieldEndLength()
+	return l
+}
+
+func (p *Source) field4Length() int {
+	l := 0
+	l += bthrift.Binary.FieldBeginLength("expose", thrift.BOOL, 4)
+	l += bthrift.Binary.BoolLength(p.Expose)
 
 	l += bthrift.Binary.FieldEndLength()
 	return l

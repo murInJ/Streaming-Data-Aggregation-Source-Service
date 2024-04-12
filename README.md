@@ -9,5 +9,7 @@
 1. Source
     - rtsp
 2. Pipeline
+   尚未实现架构，计划未来支持
 3. Expose
-    - rtsp(暂时不支持使用，未来将会把客户端和服务端分离开后再考虑开放)
+   - pull stream
+    

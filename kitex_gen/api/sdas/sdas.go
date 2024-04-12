@@ -36,41 +36,6 @@ var serviceMethods = map[string]kitex.MethodInfo{
 		false,
 		kitex.WithStreamingMode(kitex.StreamingNone),
 	),
-	"AddPipeline": kitex.NewMethodInfo(
-		addPipelineHandler,
-		newSDASAddPipelineArgs,
-		newSDASAddPipelineResult,
-		false,
-		kitex.WithStreamingMode(kitex.StreamingNone),
-	),
-	"RemovePipeline": kitex.NewMethodInfo(
-		removePipelineHandler,
-		newSDASRemovePipelineArgs,
-		newSDASRemovePipelineResult,
-		false,
-		kitex.WithStreamingMode(kitex.StreamingNone),
-	),
-	"ListPipeline": kitex.NewMethodInfo(
-		listPipelineHandler,
-		newSDASListPipelineArgs,
-		newSDASListPipelineResult,
-		false,
-		kitex.WithStreamingMode(kitex.StreamingNone),
-	),
-	"AddExpose": kitex.NewMethodInfo(
-		addExposeHandler,
-		newSDASAddExposeArgs,
-		newSDASAddExposeResult,
-		false,
-		kitex.WithStreamingMode(kitex.StreamingNone),
-	),
-	"RemoveExpose": kitex.NewMethodInfo(
-		removeExposeHandler,
-		newSDASRemoveExposeArgs,
-		newSDASRemoveExposeResult,
-		false,
-		kitex.WithStreamingMode(kitex.StreamingNone),
-	),
 	"ListExposes": kitex.NewMethodInfo(
 		listExposesHandler,
 		newSDASListExposesArgs,
@@ -205,96 +170,6 @@ func newSDASListSourcesResult() interface{} {
 	return api.NewSDASListSourcesResult()
 }
 
-func addPipelineHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
-	realArg := arg.(*api.SDASAddPipelineArgs)
-	realResult := result.(*api.SDASAddPipelineResult)
-	success, err := handler.(api.SDAS).AddPipeline(ctx, realArg.Req)
-	if err != nil {
-		return err
-	}
-	realResult.Success = success
-	return nil
-}
-func newSDASAddPipelineArgs() interface{} {
-	return api.NewSDASAddPipelineArgs()
-}
-
-func newSDASAddPipelineResult() interface{} {
-	return api.NewSDASAddPipelineResult()
-}
-
-func removePipelineHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
-	realArg := arg.(*api.SDASRemovePipelineArgs)
-	realResult := result.(*api.SDASRemovePipelineResult)
-	success, err := handler.(api.SDAS).RemovePipeline(ctx, realArg.Req)
-	if err != nil {
-		return err
-	}
-	realResult.Success = success
-	return nil
-}
-func newSDASRemovePipelineArgs() interface{} {
-	return api.NewSDASRemovePipelineArgs()
-}
-
-func newSDASRemovePipelineResult() interface{} {
-	return api.NewSDASRemovePipelineResult()
-}
-
-func listPipelineHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
-	_ = arg.(*api.SDASListPipelineArgs)
-	realResult := result.(*api.SDASListPipelineResult)
-	success, err := handler.(api.SDAS).ListPipeline(ctx)
-	if err != nil {
-		return err
-	}
-	realResult.Success = success
-	return nil
-}
-func newSDASListPipelineArgs() interface{} {
-	return api.NewSDASListPipelineArgs()
-}
-
-func newSDASListPipelineResult() interface{} {
-	return api.NewSDASListPipelineResult()
-}
-
-func addExposeHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
-	realArg := arg.(*api.SDASAddExposeArgs)
-	realResult := result.(*api.SDASAddExposeResult)
-	success, err := handler.(api.SDAS).AddExpose(ctx, realArg.Req)
-	if err != nil {
-		return err
-	}
-	realResult.Success = success
-	return nil
-}
-func newSDASAddExposeArgs() interface{} {
-	return api.NewSDASAddExposeArgs()
-}
-
-func newSDASAddExposeResult() interface{} {
-	return api.NewSDASAddExposeResult()
-}
-
-func removeExposeHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
-	realArg := arg.(*api.SDASRemoveExposeArgs)
-	realResult := result.(*api.SDASRemoveExposeResult)
-	success, err := handler.(api.SDAS).RemoveExpose(ctx, realArg.Req)
-	if err != nil {
-		return err
-	}
-	realResult.Success = success
-	return nil
-}
-func newSDASRemoveExposeArgs() interface{} {
-	return api.NewSDASRemoveExposeArgs()
-}
-
-func newSDASRemoveExposeResult() interface{} {
-	return api.NewSDASRemoveExposeResult()
-}
-
 func listExposesHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
 	_ = arg.(*api.SDASListExposesArgs)
 	realResult := result.(*api.SDASListExposesResult)
@@ -396,55 +271,6 @@ func (p *kClient) ListSources(ctx context.Context) (r *api.ListSourcesResponse, 
 	var _args api.SDASListSourcesArgs
 	var _result api.SDASListSourcesResult
 	if err = p.c.Call(ctx, "ListSources", &_args, &_result); err != nil {
-		return
-	}
-	return _result.GetSuccess(), nil
-}
-
-func (p *kClient) AddPipeline(ctx context.Context, req *api.AddPipelineRequest) (r *api.AddPipelineResponse, err error) {
-	var _args api.SDASAddPipelineArgs
-	_args.Req = req
-	var _result api.SDASAddPipelineResult
-	if err = p.c.Call(ctx, "AddPipeline", &_args, &_result); err != nil {
-		return
-	}
-	return _result.GetSuccess(), nil
-}
-
-func (p *kClient) RemovePipeline(ctx context.Context, req *api.RemovePipelineRequest) (r *api.RemovePipelineResponse, err error) {
-	var _args api.SDASRemovePipelineArgs
-	_args.Req = req
-	var _result api.SDASRemovePipelineResult
-	if err = p.c.Call(ctx, "RemovePipeline", &_args, &_result); err != nil {
-		return
-	}
-	return _result.GetSuccess(), nil
-}
-
-func (p *kClient) ListPipeline(ctx context.Context) (r *api.ListPipelinesResponse, err error) {
-	var _args api.SDASListPipelineArgs
-	var _result api.SDASListPipelineResult
-	if err = p.c.Call(ctx, "ListPipeline", &_args, &_result); err != nil {
-		return
-	}
-	return _result.GetSuccess(), nil
-}
-
-func (p *kClient) AddExpose(ctx context.Context, req *api.AddExposeRequest) (r *api.AddExposeResponse, err error) {
-	var _args api.SDASAddExposeArgs
-	_args.Req = req
-	var _result api.SDASAddExposeResult
-	if err = p.c.Call(ctx, "AddExpose", &_args, &_result); err != nil {
-		return
-	}
-	return _result.GetSuccess(), nil
-}
-
-func (p *kClient) RemoveExpose(ctx context.Context, req *api.RemoveExposeRequest) (r *api.RemoveExposeResponse, err error) {
-	var _args api.SDASRemoveExposeArgs
-	_args.Req = req
-	var _result api.SDASRemoveExposeResult
-	if err = p.c.Call(ctx, "RemoveExpose", &_args, &_result); err != nil {
 		return
 	}
 	return _result.GetSuccess(), nil

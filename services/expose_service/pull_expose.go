@@ -2,186 +2,140 @@ package services
 
 import (
 	config "SDAS/config"
+	"SDAS/kitex_gen/api"
 	source "SDAS/services/source_service"
-	"bytes"
-	"encoding/gob"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"reflect"
 	"runtime"
+	"sync"
 
 	"github.com/cloudwego/kitex/pkg/klog"
 )
 
-func addPullExpose(name string, sourceName string, msgType string) error {
-	entity, err := BuildExposeEntityPullByMsgType(name, sourceName, msgType)
-	if err != nil {
-		return err
-	}
-	entity.Start()
-	for {
-		if entity.GetStatus() == OPEN || entity.GetStatus() == PLAY || entity.GetStatus() == PAUSE {
-			Exposes.Store(name, entity)
-			return nil
-		} else if entity.GetStatus() == ERR {
-			err := errors.New("rtsp source start error")
-			return err
-		} else {
-			runtime.Gosched()
-		}
-	}
-}
+/**content
+Op
+**/
 
-func AddPullExpose(name string, sourceName string, msgType string) error {
-	err := addPullExpose(name, sourceName, msgType)
-	if err != nil {
-		return err
-	}
-	refreshExpose()
-	return nil
-}
-
-type ExposeEntityPull[T source.SOURCE_MESSAGE] struct {
+type ExposeEntityPull struct {
 	ControlChannel *chan int
-	InputChannel   *chan T
-	SeriesChannel  *chan string
+	SourceChannel  *chan *api.SourceMsg
 	Status         int
 	Name           string
 	Type           string
 	SourceName     string
-	Expose         *config.EXPOSE
+	Content        map[string]string
+	once           sync.Once
+	Stream         api.SDAS_PullExposeStreamServer
+	Wg             *sync.WaitGroup
 }
 
-func BuildExposeEntityPullByMsgType(name string, sourceName string, TypeName string) (EXPOSE_ENTITY, error) {
-	switch TypeName {
-	case "rtspMsg":
-		e, err := NewExposeEntityPull[source.MessageRtsp](name, sourceName)
-		return e, err
-	default:
-		return nil, errors.New("not support type")
-	}
-}
-
-func NewExposeEntityPull[T source.SOURCE_MESSAGE](name string, sourceName string) (*ExposeEntityPull[T], error) {
+func NewExposeEntityPull(name, sourceName string, content map[string]string) (*ExposeEntityPull, error) {
 	control_channel := make(chan int)
-	SeriesChannel := make(chan string, 1024)
 	i, ok := source.Sources.Load(sourceName)
 	if !ok {
 		err := fmt.Errorf("source not found")
 		klog.Error(err)
 		return nil, err
 	}
-	v := reflect.ValueOf(i)
-	entity := &ExposeEntityPull[T]{
+	c, err := i.(source.SourceEntity).RequestOutChannel()
+	if err != nil {
+		return nil, err
+	}
+	entity := &ExposeEntityPull{
 		Name:           name,
 		Type:           "pull",
 		ControlChannel: &control_channel,
-		InputChannel:   v.MethodByName("GetOutChannel").Call([]reflect.Value{})[0].Interface().(*chan T),
-		Status:         CLOSE,
+		SourceChannel:  c,
+		Status:         config.CLOSE,
 		SourceName:     sourceName,
-		SeriesChannel:  &SeriesChannel,
+		Content:        content,
 	}
 	return entity, nil
 
 }
 
-func (e *ExposeEntityPull[T]) GetExposeString() (string, error) {
-	b, err := json.Marshal(e.Expose)
-	if err != nil {
-		return "", err
-	}
-	return string(b), nil
-}
-
-func (e *ExposeEntityPull[T]) GetName() string {
-	return e.Name
-}
-
-func (e *ExposeEntityPull[T]) GetType() string {
-	return e.Type
-}
-
-func (e *ExposeEntityPull[T]) GetSourceName() string {
-	return e.SourceName
-}
-
-func (e *ExposeEntityPull[T]) GetStatus() int {
-	return e.Status
-}
-
-func (e *ExposeEntityPull[T]) GetControlChannel() *chan int {
-	return e.ControlChannel
-}
-
-func (e *ExposeEntityPull[T]) GetData() (any, error) {
-	data, ok := <-*e.SeriesChannel
-	if !ok {
-		return nil, errors.New("channel closed")
-	} else {
-		return data, nil
+func (e *ExposeEntityPull) GetConfig() *api.Expose {
+	return &api.Expose{
+		Name:       e.Name,
+		Type:       e.Type,
+		SourceName: e.SourceName,
+		Content:    e.Content,
 	}
 }
 
-func (e *ExposeEntityPull[T]) Start() {
-	go e.goroutine_pull_expose()
+func (e *ExposeEntityPull) Start() error {
+	if e.Status != config.CLOSE && e.Status != config.ERR {
+		return errors.New("source already started")
+	}
+	go e.goroutinePullExpose()
+	for {
+		switch e.Status {
+		case config.OPEN:
+			return nil
+		case config.ERR:
+			err := errors.New("pull expose start error")
+			return err
+		default:
+			runtime.Gosched()
+		}
+	}
 }
 
-func (e *ExposeEntityPull[T]) Stop() {
-	*e.ControlChannel <- CLOSE
-	close(*e.ControlChannel)
-	close(*e.SeriesChannel)
+func (e *ExposeEntityPull) Stop() {
+	e.once.Do(func() {
+		*e.ControlChannel <- config.CLOSE
+		close(*e.ControlChannel)
+		v, ok := source.Sources.Load(e.SourceName)
+		if ok {
+			v.(source.SourceEntity).ReleaseOutChannel()
+		}
+	})
 }
 
-func (e *ExposeEntityPull[T]) goroutine_pull_expose() {
-	e.Status = OPEN
+func (e *ExposeEntityPull) goroutinePullExpose() {
+	defer func() {
+		e.Wg.Done()
+	}()
+	e.Status = config.OPEN
 	klog.Infof("expose[pull]: %s opened.\n", e.Name)
 	for {
 		select {
 		case command := <-*e.ControlChannel:
 			switch command {
-			case CLOSE:
-				e.Status = CLOSE
+			case config.CLOSE:
+				e.Status = config.CLOSE
 				klog.Infof("expose[pull]: %s closed.", e.Name)
 				return
-			case PLAY:
-				e.Status = PLAY
+			case config.PLAY:
+				e.Status = config.PLAY
 				klog.Infof("expose[pull]: %s play.", e.Name)
-			case PAUSE:
-				e.Status = PAUSE
+			case config.PAUSE:
+				e.Status = config.PAUSE
 				klog.Infof("expose[pull]: %s pause.", e.Name)
 			}
 		default:
 		}
 
-		if e.Status == PLAY {
+		if e.Status == config.PLAY {
 			select {
-			case msg := <-*e.InputChannel:
-				var buf bytes.Buffer
-				enc := gob.NewEncoder(&buf)
-				err := enc.Encode(msg)
-				if err != nil {
-					klog.Errorf("expose[pull]: %s encode error: %v\n", e.Name, err)
-					continue
+			case msg := <-*e.SourceChannel:
+				resp := &api.PullExposeStreamResponse{
+					Code:      0,
+					Message:   "data",
+					SourceMsg: msg,
 				}
-
-				*e.SeriesChannel <- buf.String()
-
+				if sendErr := e.Stream.Send(resp); sendErr != nil {
+					e.Status = config.ERR
+					klog.Error(sendErr)
+					return
+				}
 			default:
 			}
 		}
 
-		if e.Status == PAUSE {
+		if e.Status == config.PAUSE {
 			runtime.Gosched()
 		}
 
 	}
-}
-
-func (e *ExposeEntityPull[T]) Play() {
-	*e.ControlChannel <- PLAY
-}
-
-func (e *ExposeEntityPull[T]) Pause() {
-	*e.ControlChannel <- PAUSE
 }

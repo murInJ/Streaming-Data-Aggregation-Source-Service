@@ -1,28 +1,10 @@
 namespace go api
-
+include "struct.thrift"
 struct Expose{
         1: string type
         2: string name
-        3: string content
+        3: map<string,string> content
         4: string source_name
-}
-
-struct AddExposeRequest {
-        1: Expose expose
-}
-
-struct AddExposeResponse {
-        1: string message
-        2: i32 code
-}
-
-struct RemoveExposeRequest {
-        1: string name
-}
-
-struct RemoveExposeResponse {
-        1: string message
-        2: i32 code
 }
 
 struct ListExposesResponse {
@@ -38,6 +20,5 @@ struct PullExposeStreamRequest {
 struct PullExposeStreamResponse {
         1: string message
         2: i32 code
-        3: string data
-        4: string type
+        3: struct.SourceMsg source_msg
 }

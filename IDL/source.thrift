@@ -3,7 +3,8 @@ namespace go api
 struct Source{
         1: string type
         2: string name
-        3: string content
+        3: map<string,string> content
+        4: bool expose
 }
 
 struct AddSourceRequest {

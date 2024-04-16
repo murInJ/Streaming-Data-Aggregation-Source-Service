@@ -114,6 +114,10 @@ func (e *SourceEntityRtsp) Stop() {
 	})
 }
 
+func (e *SourceEntityRtsp) GetName() string {
+	return e.Name
+}
+
 func (e *SourceEntityRtsp) goroutineRtspSource() {
 	c, err := e.startupRtsp()
 	if err != nil {
@@ -235,6 +239,14 @@ func (e *SourceEntityRtsp) handlerH264(c *gortsplib.Client, desc *description.Se
 }
 
 func (e *SourceEntityRtsp) handlerNalu(nalu []byte, ntp time.Time, ntpAvailable bool) {
+	defer func() {
+		err := recover()
+		if err != nil {
+			klog.Error(err)
+		}
+		return
+	}()
+
 	// convert NALUs into RGBA frames
 	img, err := e.Decoder.Decode(nalu)
 	if err != nil {

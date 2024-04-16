@@ -5,6 +5,7 @@ import (
 	"SDAS/kitex_gen/api"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/cloudwego/kitex/pkg/klog"
 	"path/filepath"
 	"plugin"
@@ -14,9 +15,9 @@ import (
 )
 
 /**content
-	inSource-entry map
-	exist-outSource map
-	outSource-expose map
+	inSource_entry_map map[string]string
+	exist_outSource_map map[string]string
+	outSource_expose_map map[string]string
 	args json_string
 **/
 
@@ -58,6 +59,7 @@ func NewSourceEntityPlugin(name string, expose bool, content map[string]string) 
 		Type:              "plugin",
 		Content:           content,
 		ControlChannel:    &controlChannel,
+		Status:            config.CLOSE,
 		Sources:           sources,
 		InsourceEntryMap:  insourceEntryMap,
 		ExistOutsourceMap: existOutsourceMap,
@@ -101,15 +103,6 @@ type SourceRootEntityPlugin struct {
 	InsourceEntryMap  map[string]string
 	ExistOutsourceMap map[string]string
 	Args              string
-}
-
-func (e *SourceRootEntityPlugin) GetConfig() *api.Source {
-	return &api.Source{
-		Type:    e.Type,
-		Name:    e.Name,
-		Expose:  e.Expose,
-		Content: e.Content,
-	}
 }
 
 func (e *SourceRootEntityPlugin) Start() error {
@@ -165,12 +158,27 @@ func (e *SourceRootEntityPlugin) goroutinePluginSource() {
 		default:
 
 		}
-		Entry := make(map[string]*api.SourceMsg)
+		Entry := make(map[string](map[string]any))
 		for insource, channel := range e.Sources {
 			msg := <-*channel
-			Entry[insource] = msg
+			if msg == nil {
+				for _, outsource := range e.ExistOutsourceMap {
+					outChannel := e.children[outsource].OutputChannel
+					close(*outChannel)
+				}
+				e.Status = config.CLOSE
+				klog.Infof("source[plugin]: %s closed.since %s have been closed\n", e.Name, insource)
+				return
+			}
+			Entry[insource] = map[string]any{
+				"Data":     msg.Data,
+				"DataType": msg.DataType,
+				"Ntp":      msg.Ntp,
+			}
 		}
+
 		Exist, err := p(Entry)
+
 		if err != nil {
 			klog.Error(err)
 			e.Status = config.ERR
@@ -178,18 +186,22 @@ func (e *SourceRootEntityPlugin) goroutinePluginSource() {
 		}
 		for exist, outsource := range e.ExistOutsourceMap {
 			outChannel := e.children[outsource].OutputChannel
-			*outChannel <- Exist[exist]
+			*outChannel <- &api.SourceMsg{
+				Data:     Exist[exist]["Data"].([]byte),
+				DataType: Exist[exist]["DataType"].(string),
+				Ntp:      Exist[exist]["Ntp"].(int64),
+			}
 		}
 	}
 }
 
-func (e *SourceRootEntityPlugin) startupPlugin(args string) (func(map[string]*api.SourceMsg) (map[string]*api.SourceMsg, error), error) {
+func (e *SourceRootEntityPlugin) startupPlugin(args string) (func(map[string]map[string]any) (map[string]map[string]any, error), error) {
 	p, err := e.getPlugin(e.Name, args)
 	return p, err
 }
 
-func (e *SourceRootEntityPlugin) getPlugin(name string, args string) (func(map[string]*api.SourceMsg) (map[string]*api.SourceMsg, error), error) {
-	pluginPath := filepath.Join(config.Conf.Server.PluginPath, name)
+func (e *SourceRootEntityPlugin) getPlugin(name string, args string) (func(map[string]map[string]any) (map[string]map[string]any, error), error) {
+	pluginPath := filepath.Join(config.Conf.Server.PluginPath, fmt.Sprintf("%s.so", name))
 
 	p, err := plugin.Open(pluginPath)
 	if err != nil {
@@ -207,7 +219,7 @@ func (e *SourceRootEntityPlugin) getPlugin(name string, args string) (func(map[s
 	if err != nil {
 		return nil, err
 	}
-	f := symbol.(func(map[string]*api.SourceMsg) (map[string]*api.SourceMsg, error))
+	f := symbol.(func(map[string](map[string]any)) (map[string](map[string]any), error))
 
 	return f, nil
 }
@@ -222,7 +234,12 @@ type SourceEntityPlugin struct {
 }
 
 func (e *SourceEntityPlugin) GetConfig() *api.Source {
-	return e.root.GetConfig()
+	return &api.Source{
+		Type:    e.Type,
+		Name:    e.Name,
+		Expose:  e.Expose,
+		Content: e.root.Content,
+	}
 }
 
 func (e *SourceEntityPlugin) RequestOutChannel() (*chan *api.SourceMsg, error) {
@@ -247,4 +264,8 @@ func (e *SourceEntityPlugin) Start() error {
 
 func (e *SourceEntityPlugin) Stop() {
 	e.root.Stop()
+}
+
+func (e *SourceEntityPlugin) GetName() string {
+	return e.Name
 }

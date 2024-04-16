@@ -53,16 +53,13 @@ func (c *SDASClient) ListSources() ([]*api.Source, error) {
 	return resp.Sources, nil
 }
 
-func (c *SDASClient) AddSource(Type, Name, Url, Format string, Expose bool) error {
+func (c *SDASClient) AddSource(Type, Name string, Expose bool, Content map[string]string) error {
 	req := &api.AddSourceRequest{
 		Source: &api.Source{
-			Type: Type,
-			Name: Name,
-			Content: map[string]string{
-				"url":    Url,
-				"format": Format,
-			},
-			Expose: Expose,
+			Type:    Type,
+			Name:    Name,
+			Content: Content,
+			Expose:  Expose,
 		},
 	}
 	resp, err := c.c.AddSource(context.Background(), req)

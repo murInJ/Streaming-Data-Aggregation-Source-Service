@@ -14,6 +14,7 @@ type SourceEntity interface {
 	GetConfig() *api.Source
 	RequestOutChannel() (*chan *api.SourceMsg, error)
 	ReleaseOutChannel()
+	GetName() string
 }
 
 func BuildSourceEntity(Name, Type string, Expose bool, Content map[string]string) ([]SourceEntity, error) {
@@ -53,7 +54,7 @@ func AddSource(Name, Type string, Expose bool, Content map[string]string) error 
 		if err != nil {
 			return err
 		}
-		Sources.Store(Name, entity)
+		Sources.Store(entity.GetName(), entity)
 	}
 
 	return nil

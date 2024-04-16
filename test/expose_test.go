@@ -21,7 +21,10 @@ func TestPullExpose(t *testing.T) {
 	t.Log(sources)
 	l := len(sources)
 
-	err = c.AddSource("rtsp", "source_rtsp_test", "rtsp://admin:a12345678@192.168.0.238", "h264", true)
+	err = c.AddSource("rtsp", "source_rtsp_test", true, map[string]string{
+		"url":    "rtsp://admin:a12345678@192.168.0.238",
+		"format": "h264",
+	})
 	if err != nil {
 		t.Fatal(err)
 	}

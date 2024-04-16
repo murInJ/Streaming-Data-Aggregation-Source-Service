@@ -8,8 +8,7 @@
 ## 现在支持的
 1. Source
     - rtsp
-2. Pipeline
-   尚未实现架构，计划未来支持
-3. Expose
+    - plugin
+2. Expose
    - pull stream
     

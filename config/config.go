@@ -26,9 +26,10 @@ var Conf *Config
 func NewDefaultConfig() {
 	Conf = &Config{
 		Server: SERVER{
-			Node: "test_sdas",
-			Host: "0.0.0.0",
-			Port: 8088,
+			Node:       "test_sdas",
+			Host:       "0.0.0.0",
+			Port:       8088,
+			PluginPath: "./plugins",
 		},
 	}
 }

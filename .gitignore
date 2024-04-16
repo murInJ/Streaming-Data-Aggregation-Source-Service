@@ -4,3 +4,4 @@ config.json
 /.VSCodeCounter
 /.idea
 /.idea/*
+/plugins/*

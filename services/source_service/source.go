@@ -16,14 +16,25 @@ type SourceEntity interface {
 	ReleaseOutChannel()
 }
 
-func BuildSourceEntity(Name, Type string, Expose bool, Content map[string]string) (SourceEntity, error) {
+func BuildSourceEntity(Name, Type string, Expose bool, Content map[string]string) ([]SourceEntity, error) {
 	switch Type {
 	case "rtsp":
 		entity, err := NewSourceEntityRtsp(Name, Expose, Content)
 		if err != nil {
 			return nil, err
 		}
-		return entity, err
+		return []SourceEntity{entity}, nil
+	case "plugin":
+		enities, err := NewSourceEntityPlugin(Name, Expose, Content)
+		if err != nil {
+			return nil, err
+		}
+		var sourceEntities []SourceEntity
+		for _, entity := range enities {
+			sourceEntities = append(sourceEntities, entity)
+		}
+
+		return sourceEntities, nil
 	default:
 		return nil, errors.New("type" + Name + " is not supported")
 	}
@@ -33,15 +44,18 @@ func AddSource(Name, Type string, Expose bool, Content map[string]string) error 
 	if _, ok := Sources.Load(Name); ok {
 		return errors.New("Source already exists")
 	}
-	entity, err := BuildSourceEntity(Name, Type, Expose, Content)
+	entities, err := BuildSourceEntity(Name, Type, Expose, Content)
 	if err != nil {
 		return err
 	}
-	err = entity.Start()
-	if err != nil {
-		return err
+	for _, entity := range entities {
+		err = entity.Start()
+		if err != nil {
+			return err
+		}
+		Sources.Store(Name, entity)
 	}
-	Sources.Store(Name, entity)
+
 	return nil
 }
 

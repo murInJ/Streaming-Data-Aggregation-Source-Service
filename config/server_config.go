@@ -1,9 +1,10 @@
 package config
 
 type SERVER struct {
-	Node string `json:"node"`
-	Host string `json:"host"`
-	Port int    `json:"port"`
+	Node       string `json:"node"`
+	Host       string `json:"host"`
+	Port       int    `json:"port"`
+	PluginPath string `json:"pluginPath"`
 }
 
 // type REGISTRY struct {

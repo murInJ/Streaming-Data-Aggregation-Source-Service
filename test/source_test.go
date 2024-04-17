@@ -180,3 +180,129 @@ func TestPluginSource(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestRemoteSource(t *testing.T) {
+	//start service1
+	c1, err := cli.NewSDASClient("0.0.0.0:8087", true, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	sources, err := c1.ListSources()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = c1.AddSource("rtsp", "source_rtsp_test", true, map[string]string{
+		"url":    "rtsp://admin:a12345678@192.168.0.238",
+		"format": "h264",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	sources, err = c1.ListSources()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	//start service2
+	c2, err := cli.NewSDASClient("0.0.0.0:8088", true, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	sources, err = c2.ListSources()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(sources)
+
+	err = c2.AddSource("remote", "source_remote_test", true, map[string]string{
+		"url":         "127.0.0.1:8087",
+		"source_name": "source_rtsp_test",
+	})
+
+	sources, err = c2.ListSources()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(sources)
+
+	//open
+	err = c2.SendPullExposeStream("expose_pull_test", "source_remote_test", 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	//play
+	err = c2.SendPullExposeStream("expose_pull_test", "source_remote_test", 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	//window := gocv.NewWindow("expose_pull_test")
+	//window.ResizeWindow(512, 512)
+
+	for i := 0; i < 100; i++ {
+		msg, err := c2.RecvPullExposeStream()
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			t.Fatal(err)
+		}
+
+		t.Log(msg.Ntp, msg.DataType)
+
+		//var img image.RGBA
+		//err = msgpack.Unmarshal(msg.Data, &img)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//
+		//mat, err := gocv.ImageToMatRGB(&img)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//window.IMShow(mat)
+		//
+		//window.WaitKey(1)
+		//err = mat.Close()
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+
+	}
+
+	//close service2
+	err = c2.SendPullExposeStream("expose_pull_test", "source_remote_test", 3)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = c2.RemoveSource("source_remote_test")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	sources, err = c2.ListSources()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	err = c2.Close()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	//close service1
+	err = c1.RemoveSource("source_rtsp_test")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	sources, err = c1.ListSources()
+	if err != nil {
+		t.Fatal(err)
+	}
+}

@@ -118,6 +118,10 @@ func (e *SourceEntityRtsp) GetName() string {
 	return e.Name
 }
 
+func (e *SourceEntityRtsp) IsExpose() bool {
+	return e.Expose
+}
+
 func (e *SourceEntityRtsp) goroutineRtspSource() {
 	c, err := e.startupRtsp()
 	if err != nil {

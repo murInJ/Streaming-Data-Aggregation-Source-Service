@@ -289,3 +289,7 @@ func (e *SourceEntityPlugin) Stop() {
 func (e *SourceEntityPlugin) GetName() string {
 	return e.Name
 }
+
+func (e *SourceEntityPlugin) IsExpose() bool {
+	return e.Expose
+}

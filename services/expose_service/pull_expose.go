@@ -33,11 +33,15 @@ func NewExposeEntityPull(name, sourceName string, content map[string]string) (*E
 	control_channel := make(chan int)
 	i, ok := source.Sources.Load(sourceName)
 	if !ok {
-		err := fmt.Errorf("source not found")
+		err := fmt.Errorf("source %s not found", sourceName)
 		klog.Error(err)
 		return nil, err
 	}
-	c, err := i.(source.SourceEntity).RequestOutChannel()
+	sourceEntity := i.(source.SourceEntity)
+	if !sourceEntity.IsExpose() {
+		return nil, fmt.Errorf("source is not expose")
+	}
+	c, err := sourceEntity.RequestOutChannel()
 	if err != nil {
 		return nil, err
 	}

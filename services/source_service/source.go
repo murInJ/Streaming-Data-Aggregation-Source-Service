@@ -15,6 +15,7 @@ type SourceEntity interface {
 	RequestOutChannel() (*chan *api.SourceMsg, error)
 	ReleaseOutChannel()
 	GetName() string
+	IsExpose() bool
 }
 
 func BuildSourceEntity(Name, Type string, Expose bool, Content map[string]string) ([]SourceEntity, error) {
@@ -36,6 +37,12 @@ func BuildSourceEntity(Name, Type string, Expose bool, Content map[string]string
 		}
 
 		return sourceEntities, nil
+	case "remote":
+		entity, err := NewSourceEntityRemote(Name, Expose, Content)
+		if err != nil {
+			return nil, err
+		}
+		return []SourceEntity{entity}, nil
 	default:
 		return nil, errors.New("type" + Name + " is not supported")
 	}

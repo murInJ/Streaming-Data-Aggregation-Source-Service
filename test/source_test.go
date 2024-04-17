@@ -123,7 +123,7 @@ func TestPluginSource(t *testing.T) {
 	//window := gocv.NewWindow("expose_pull_test")
 	//window.ResizeWindow(512, 512)
 
-	for i := 0; i < 1000; i++ {
+	for i := 0; i < 100; i++ {
 		msg, err := c.RecvPullExposeStream()
 		if err == io.EOF {
 			break

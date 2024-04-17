@@ -3,10 +3,12 @@ package services
 import (
 	"SDAS/config"
 	"SDAS/kitex_gen/api"
+	"SDAS/utils"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/cloudwego/kitex/pkg/klog"
+	"path"
 	"path/filepath"
 	"plugin"
 	"runtime"
@@ -198,16 +200,19 @@ func (e *SourceRootEntityPlugin) goroutinePluginSource() {
 }
 
 func (e *SourceRootEntityPlugin) startupPlugin(args string) (func(map[string]map[string]any) (map[string]map[string]any, error), error) {
-	// FUTURE TODO:从网络下载，github目前没有稳定的下载环境
-	//err := utils.CreateFileOrDir(config.Conf.Server.PluginPath)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//fileName := fmt.Sprintf("%s.so", e.Name)
-	//err = utils.DownloadFileFromUrl(fmt.Sprintf("https://github.com/murInJ/SDAS-plugin/tree/main/plugins/%s", fileName), path.Join(config.Conf.Server.PluginPath, fileName))
-	//if err != nil {
-	//	return nil, err
-	//}
+	err := utils.CreateFileOrDir(config.Conf.Server.PluginPath)
+	if err != nil {
+		return nil, err
+	}
+	fileName := fmt.Sprintf("%s.so", e.Name)
+	localPath := path.Join(config.Conf.Server.PluginPath, fileName)
+	exist := utils.CheckFileOrDirExists(localPath)
+	if !exist {
+		err = utils.DownloadFileFromUrl(fmt.Sprintf("https://cdn.jsdelivr.net/gh/murInJ/SDAS-plugin/plugins/%s", fileName), localPath)
+		if err != nil {
+			return nil, err
+		}
+	}
 	p, err := e.getPlugin(e.Name, args)
 	return p, err
 }

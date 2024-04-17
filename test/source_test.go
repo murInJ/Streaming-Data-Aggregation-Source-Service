@@ -3,7 +3,6 @@ package test
 import (
 	cli "SDAS/client"
 	"encoding/json"
-	"gocv.io/x/gocv"
 	"io"
 	"testing"
 )
@@ -73,7 +72,7 @@ func TestPluginSource(t *testing.T) {
 		t.Fatal(err)
 	}
 	err = c.AddSource("rtsp", "source_rtsp_test2", true, map[string]string{
-		"url":    "rtsp://admin:a12345678@192.168.0.238",
+		"url":    "rtsp://admin:a12345678@192.168.0.241",
 		"format": "h264",
 	})
 	if err != nil {
@@ -97,7 +96,7 @@ func TestPluginSource(t *testing.T) {
 		"inSource_entry_map":   string(iem),
 		"exist_outSource_map":  string(eom),
 		"outSource_expose_map": string(oem),
-		"args":                 "",
+		"args":                 ``,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -121,10 +120,10 @@ func TestPluginSource(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	window := gocv.NewWindow("expose_pull_test")
-	window.ResizeWindow(512, 512)
+	//window := gocv.NewWindow("expose_pull_test")
+	//window.ResizeWindow(512, 512)
 
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 1000; i++ {
 		msg, err := c.RecvPullExposeStream()
 		if err == io.EOF {
 			break
@@ -134,6 +133,7 @@ func TestPluginSource(t *testing.T) {
 
 		t.Log(msg.Ntp, msg.DataType)
 
+		//
 		//var img image.RGBA
 		//err = msgpack.Unmarshal(msg.Data, &img)
 		//if err != nil {
@@ -151,6 +151,7 @@ func TestPluginSource(t *testing.T) {
 		//if err != nil {
 		//	t.Fatal(err)
 		//}
+		//
 
 	}
 

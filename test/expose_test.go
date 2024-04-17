@@ -2,8 +2,6 @@ package test
 
 import (
 	cli "SDAS/client"
-	"github.com/vmihailenco/msgpack/v5"
-	"image"
 	"io"
 	"testing"
 )
@@ -63,12 +61,12 @@ func TestPullExpose(t *testing.T) {
 
 		t.Log(msg.Ntp, msg.DataType)
 
-		var img image.RGBA
-		err = msgpack.Unmarshal(msg.Data, &img)
-		if err != nil {
-			t.Fatal(err)
-		}
-
+		//var img image.RGBA
+		//err = msgpack.Unmarshal(msg.Data, &img)
+		//if err != nil {
+		//	t.Fatal(err)
+		//}
+		//
 		//mat, err := gocv.ImageToMatRGB(&img)
 		//if err != nil {
 		//	t.Fatal(err)

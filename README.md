@@ -7,8 +7,8 @@
 
 ## 现在支持的
 1. Source
-    - rtsp
-    - plugin
+    - `rtsp` 从rtsp服务器拉流获取数据
+    - `plugin` 从指定源获取数据，并通过指定插件的处理函数进行数据处理后，成为指定源。其中具体编写方法请参考[plugin仓库](https://github.com/murInJ/SDAS-plugin)
 2. Expose
-   - pull stream
+   - `pull stream` 通过rpc stream获取指定源的数据
     

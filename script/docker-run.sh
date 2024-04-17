@@ -1,0 +1,1 @@
+docker run --name SDAS -d -p 8082:80 sdas

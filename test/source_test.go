@@ -8,7 +8,7 @@ import (
 )
 
 func TestRtspSource(t *testing.T) {
-	c, err := cli.NewSDASClient("0.0.0.0:8088", true, false)
+	c, err := cli.NewSDASClient("0.0.0.0:8082", true, false)
 	if err != nil {
 		t.Fatal(err)
 	}

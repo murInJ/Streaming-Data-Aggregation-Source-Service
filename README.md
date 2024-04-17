@@ -5,6 +5,8 @@
 <!-- ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/murInJ/Streaming-Data-Aggregation-Source-Service/go.yml) -->
 该微服务的作用在于将多个分散的数据源进行转发，同时聚合到一起，进行处理后再对外提供服务。
 
+`sh script/dploy_build.sh`执行部署环境的二进制和docker构建
+
 ## 现在支持的
 1. Source
     - `rtsp` 从rtsp服务器拉流获取数据

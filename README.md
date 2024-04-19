@@ -5,7 +5,7 @@
 <!-- ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/murInJ/Streaming-Data-Aggregation-Source-Service/go.yml) -->
 该微服务的作用在于将多个分散的数据源进行转发，同时聚合到一起，进行处理后再对外提供服务。
 
-`sh script/dploy_build.sh`执行部署环境的二进制和docker构建
+`sh script/deploy_build.sh`执行部署环境的二进制和docker构建
 
 ## 现在支持的
 1. Source
@@ -14,4 +14,7 @@
     - `remote` 从指定url的SDAS拉取数据
 3. Expose
    - `pull stream` 通过rpc stream获取指定源的数据
-    
+## Contributors
+<a href="https://github.com/MurInj/Streaming-Data-Aggregation-Source-Service/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=MurInj/Streaming-Data-Aggregation-Source-Service" />
+</a>

@@ -2,6 +2,7 @@
 RUN_NAME="SDAS"
 
 mkdir -p output/bin
+mkdir -p output/image
 cp script/* output/
 chmod +x output/bootstrap.sh
 

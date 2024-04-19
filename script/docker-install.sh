@@ -1,0 +1,1 @@
+docker load -i image/SDAS.tar

@@ -15,6 +15,5 @@
 3. Expose
    - `pull stream` 通过rpc stream获取指定源的数据
 ## Contributors
-<a href="https://github.com/MurInj/Streaming-Data-Aggregation-Source-Service/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=MurInj/Streaming-Data-Aggregation-Source-Service" />
-</a>
+<!-- readme: contributors -start -->
+<!-- readme: contributors -end -->

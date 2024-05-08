@@ -4,6 +4,7 @@ import (
 	cli "SDAS/client"
 	"io"
 	"testing"
+	"time"
 )
 
 func TestPullExpose(t *testing.T) {
@@ -92,6 +93,80 @@ func TestPullExpose(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	err = c.RemoveSource("source_rtsp_test")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	sources, err = c.ListSources()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(sources)
+	if len(sources) != l {
+		t.Fatal("sources not empty")
+	}
+
+	err = c.Close()
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestHttpPushExpose(t *testing.T) {
+	c, err := cli.NewSDASClient("0.0.0.0:8080", true, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	sources, err := c.ListSources()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(sources)
+	l := len(sources)
+
+	err = c.AddSource("rtsp", "source_rtsp_test", true, map[string]string{
+		"url":    "rtsp://admin:a12345678@192.168.0.238",
+		"format": "h264",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	sources, err = c.ListSources()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(sources)
+	if len(sources) != l+1 {
+		t.Fatal("sources length not equal 1")
+	}
+
+	////////////////////////////
+	err = c.AddExpose("httpPush", "expose_httpPush_test", "source_rtsp_test", map[string]string{
+		"url": "http://192.168.0.4:8089/recv_image",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	exposes, err := c.ListExposes()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(exposes)
+	if len(exposes) != l+1 {
+		t.Fatal("exposes length not equal 1")
+	}
+	time.Sleep(10 * time.Second)
+
+	err = c.RemoveExpose("expose_httpPush_test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	////////////////////////////
 
 	err = c.RemoveSource("source_rtsp_test")
 	if err != nil {

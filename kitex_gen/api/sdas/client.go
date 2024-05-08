@@ -19,6 +19,8 @@ type Client interface {
 	RemoveSource(ctx context.Context, req *api.RemoveSourceRequest, callOptions ...callopt.Option) (r *api.RemoveSourceResponse, err error)
 	ListSources(ctx context.Context, callOptions ...callopt.Option) (r *api.ListSourcesResponse, err error)
 	ListExposes(ctx context.Context, callOptions ...callopt.Option) (r *api.ListExposesResponse, err error)
+	AddExpose(ctx context.Context, req *api.AddExposeRequest, callOptions ...callopt.Option) (r *api.AddExposeResponse, err error)
+	RemoveExpose(ctx context.Context, req *api.RemoveExposeRequest, callOptions ...callopt.Option) (r *api.RemoveExposeResponse, err error)
 }
 
 // StreamClient is designed to provide Interface for Streaming APIs.
@@ -79,6 +81,16 @@ func (p *kSDASClient) ListSources(ctx context.Context, callOptions ...callopt.Op
 func (p *kSDASClient) ListExposes(ctx context.Context, callOptions ...callopt.Option) (r *api.ListExposesResponse, err error) {
 	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
 	return p.kClient.ListExposes(ctx)
+}
+
+func (p *kSDASClient) AddExpose(ctx context.Context, req *api.AddExposeRequest, callOptions ...callopt.Option) (r *api.AddExposeResponse, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.AddExpose(ctx, req)
+}
+
+func (p *kSDASClient) RemoveExpose(ctx context.Context, req *api.RemoveExposeRequest, callOptions ...callopt.Option) (r *api.RemoveExposeResponse, err error) {
+	ctx = client.NewCtxWithCallOptions(ctx, callOptions)
+	return p.kClient.RemoveExpose(ctx, req)
 }
 
 // NewStreamClient creates a stream client for the service's streaming APIs defined in IDL.

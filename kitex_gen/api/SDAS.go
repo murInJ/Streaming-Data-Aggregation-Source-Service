@@ -19,6 +19,10 @@ type SDAS interface {
 	ListExposes(ctx context.Context) (r *ListExposesResponse, err error)
 
 	PullExposeStream(stream SDAS_PullExposeStreamServer) (err error)
+
+	AddExpose(ctx context.Context, req *AddExposeRequest) (r *AddExposeResponse, err error)
+
+	RemoveExpose(ctx context.Context, req *RemoveExposeRequest) (r *RemoveExposeResponse, err error)
 }
 
 type SDASClient struct {
@@ -93,6 +97,25 @@ type SDAS_PullExposeStreamServer interface {
 	Send(*PullExposeStreamResponse) error
 }
 
+func (p *SDASClient) AddExpose(ctx context.Context, req *AddExposeRequest) (r *AddExposeResponse, err error) {
+	var _args SDASAddExposeArgs
+	_args.Req = req
+	var _result SDASAddExposeResult
+	if err = p.Client_().Call(ctx, "AddExpose", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+func (p *SDASClient) RemoveExpose(ctx context.Context, req *RemoveExposeRequest) (r *RemoveExposeResponse, err error) {
+	var _args SDASRemoveExposeArgs
+	_args.Req = req
+	var _result SDASRemoveExposeResult
+	if err = p.Client_().Call(ctx, "RemoveExpose", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+
 type SDASProcessor struct {
 	processorMap map[string]thrift.TProcessorFunction
 	handler      SDAS
@@ -118,6 +141,8 @@ func NewSDASProcessor(handler SDAS) *SDASProcessor {
 	self.AddToProcessorMap("ListSources", &sDASProcessorListSources{handler: handler})
 	self.AddToProcessorMap("ListExposes", &sDASProcessorListExposes{handler: handler})
 	self.AddToProcessorMap("PullExposeStream", &sDASProcessorPullExposeStream{handler: handler})
+	self.AddToProcessorMap("AddExpose", &sDASProcessorAddExpose{handler: handler})
+	self.AddToProcessorMap("RemoveExpose", &sDASProcessorRemoveExpose{handler: handler})
 	return self
 }
 func (p *SDASProcessor) Process(ctx context.Context, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
@@ -336,6 +361,102 @@ type sDASProcessorPullExposeStream struct {
 
 func (p *sDASProcessorPullExposeStream) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
 	panic("streaming method SDAS.PullExposeStream(mode = bidirectional) not available, please use Kitex Thrift Streaming Client.")
+}
+
+type sDASProcessorAddExpose struct {
+	handler SDAS
+}
+
+func (p *sDASProcessorAddExpose) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
+	args := SDASAddExposeArgs{}
+	if err = args.Read(iprot); err != nil {
+		iprot.ReadMessageEnd()
+		x := thrift.NewTApplicationException(thrift.PROTOCOL_ERROR, err.Error())
+		oprot.WriteMessageBegin("AddExpose", thrift.EXCEPTION, seqId)
+		x.Write(oprot)
+		oprot.WriteMessageEnd()
+		oprot.Flush(ctx)
+		return false, err
+	}
+
+	iprot.ReadMessageEnd()
+	var err2 error
+	result := SDASAddExposeResult{}
+	var retval *AddExposeResponse
+	if retval, err2 = p.handler.AddExpose(ctx, args.Req); err2 != nil {
+		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing AddExpose: "+err2.Error())
+		oprot.WriteMessageBegin("AddExpose", thrift.EXCEPTION, seqId)
+		x.Write(oprot)
+		oprot.WriteMessageEnd()
+		oprot.Flush(ctx)
+		return true, err2
+	} else {
+		result.Success = retval
+	}
+	if err2 = oprot.WriteMessageBegin("AddExpose", thrift.REPLY, seqId); err2 != nil {
+		err = err2
+	}
+	if err2 = result.Write(oprot); err == nil && err2 != nil {
+		err = err2
+	}
+	if err2 = oprot.WriteMessageEnd(); err == nil && err2 != nil {
+		err = err2
+	}
+	if err2 = oprot.Flush(ctx); err == nil && err2 != nil {
+		err = err2
+	}
+	if err != nil {
+		return
+	}
+	return true, err
+}
+
+type sDASProcessorRemoveExpose struct {
+	handler SDAS
+}
+
+func (p *sDASProcessorRemoveExpose) Process(ctx context.Context, seqId int32, iprot, oprot thrift.TProtocol) (success bool, err thrift.TException) {
+	args := SDASRemoveExposeArgs{}
+	if err = args.Read(iprot); err != nil {
+		iprot.ReadMessageEnd()
+		x := thrift.NewTApplicationException(thrift.PROTOCOL_ERROR, err.Error())
+		oprot.WriteMessageBegin("RemoveExpose", thrift.EXCEPTION, seqId)
+		x.Write(oprot)
+		oprot.WriteMessageEnd()
+		oprot.Flush(ctx)
+		return false, err
+	}
+
+	iprot.ReadMessageEnd()
+	var err2 error
+	result := SDASRemoveExposeResult{}
+	var retval *RemoveExposeResponse
+	if retval, err2 = p.handler.RemoveExpose(ctx, args.Req); err2 != nil {
+		x := thrift.NewTApplicationException(thrift.INTERNAL_ERROR, "Internal error processing RemoveExpose: "+err2.Error())
+		oprot.WriteMessageBegin("RemoveExpose", thrift.EXCEPTION, seqId)
+		x.Write(oprot)
+		oprot.WriteMessageEnd()
+		oprot.Flush(ctx)
+		return true, err2
+	} else {
+		result.Success = retval
+	}
+	if err2 = oprot.WriteMessageBegin("RemoveExpose", thrift.REPLY, seqId); err2 != nil {
+		err = err2
+	}
+	if err2 = result.Write(oprot); err == nil && err2 != nil {
+		err = err2
+	}
+	if err2 = oprot.WriteMessageEnd(); err == nil && err2 != nil {
+		err = err2
+	}
+	if err2 = oprot.Flush(ctx); err == nil && err2 != nil {
+		err = err2
+	}
+	if err != nil {
+		return
+	}
+	return true, err
 }
 
 type SDASAddSourceArgs struct {
@@ -1879,6 +2000,686 @@ func (p *SDASPullExposeStreamResult) DeepEqual(ano *SDASPullExposeStreamResult) 
 }
 
 func (p *SDASPullExposeStreamResult) Field0DeepEqual(src *PullExposeStreamResponse) bool {
+
+	if !p.Success.DeepEqual(src) {
+		return false
+	}
+	return true
+}
+
+type SDASAddExposeArgs struct {
+	Req *AddExposeRequest `thrift:"req,1" frugal:"1,default,AddExposeRequest" json:"req"`
+}
+
+func NewSDASAddExposeArgs() *SDASAddExposeArgs {
+	return &SDASAddExposeArgs{}
+}
+
+func (p *SDASAddExposeArgs) InitDefault() {
+	*p = SDASAddExposeArgs{}
+}
+
+var SDASAddExposeArgs_Req_DEFAULT *AddExposeRequest
+
+func (p *SDASAddExposeArgs) GetReq() (v *AddExposeRequest) {
+	if !p.IsSetReq() {
+		return SDASAddExposeArgs_Req_DEFAULT
+	}
+	return p.Req
+}
+func (p *SDASAddExposeArgs) SetReq(val *AddExposeRequest) {
+	p.Req = val
+}
+
+var fieldIDToName_SDASAddExposeArgs = map[int16]string{
+	1: "req",
+}
+
+func (p *SDASAddExposeArgs) IsSetReq() bool {
+	return p.Req != nil
+}
+
+func (p *SDASAddExposeArgs) Read(iprot thrift.TProtocol) (err error) {
+
+	var fieldTypeId thrift.TType
+	var fieldId int16
+
+	if _, err = iprot.ReadStructBegin(); err != nil {
+		goto ReadStructBeginError
+	}
+
+	for {
+		_, fieldTypeId, fieldId, err = iprot.ReadFieldBegin()
+		if err != nil {
+			goto ReadFieldBeginError
+		}
+		if fieldTypeId == thrift.STOP {
+			break
+		}
+
+		switch fieldId {
+		case 1:
+			if fieldTypeId == thrift.STRUCT {
+				if err = p.ReadField1(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		default:
+			if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		}
+		if err = iprot.ReadFieldEnd(); err != nil {
+			goto ReadFieldEndError
+		}
+	}
+	if err = iprot.ReadStructEnd(); err != nil {
+		goto ReadStructEndError
+	}
+
+	return nil
+ReadStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
+ReadFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
+ReadFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_SDASAddExposeArgs[fieldId]), err)
+SkipFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
+
+ReadFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
+ReadStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+}
+
+func (p *SDASAddExposeArgs) ReadField1(iprot thrift.TProtocol) error {
+	p.Req = NewAddExposeRequest()
+	if err := p.Req.Read(iprot); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (p *SDASAddExposeArgs) Write(oprot thrift.TProtocol) (err error) {
+	var fieldId int16
+	if err = oprot.WriteStructBegin("AddExpose_args"); err != nil {
+		goto WriteStructBeginError
+	}
+	if p != nil {
+		if err = p.writeField1(oprot); err != nil {
+			fieldId = 1
+			goto WriteFieldError
+		}
+	}
+	if err = oprot.WriteFieldStop(); err != nil {
+		goto WriteFieldStopError
+	}
+	if err = oprot.WriteStructEnd(); err != nil {
+		goto WriteStructEndError
+	}
+	return nil
+WriteStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err)
+WriteFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T write field %d error: ", p, fieldId), err)
+WriteFieldStopError:
+	return thrift.PrependError(fmt.Sprintf("%T write field stop error: ", p), err)
+WriteStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
+}
+
+func (p *SDASAddExposeArgs) writeField1(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("req", thrift.STRUCT, 1); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := p.Req.Write(oprot); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
+}
+
+func (p *SDASAddExposeArgs) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("SDASAddExposeArgs(%+v)", *p)
+
+}
+
+func (p *SDASAddExposeArgs) DeepEqual(ano *SDASAddExposeArgs) bool {
+	if p == ano {
+		return true
+	} else if p == nil || ano == nil {
+		return false
+	}
+	if !p.Field1DeepEqual(ano.Req) {
+		return false
+	}
+	return true
+}
+
+func (p *SDASAddExposeArgs) Field1DeepEqual(src *AddExposeRequest) bool {
+
+	if !p.Req.DeepEqual(src) {
+		return false
+	}
+	return true
+}
+
+type SDASAddExposeResult struct {
+	Success *AddExposeResponse `thrift:"success,0,optional" frugal:"0,optional,AddExposeResponse" json:"success,omitempty"`
+}
+
+func NewSDASAddExposeResult() *SDASAddExposeResult {
+	return &SDASAddExposeResult{}
+}
+
+func (p *SDASAddExposeResult) InitDefault() {
+	*p = SDASAddExposeResult{}
+}
+
+var SDASAddExposeResult_Success_DEFAULT *AddExposeResponse
+
+func (p *SDASAddExposeResult) GetSuccess() (v *AddExposeResponse) {
+	if !p.IsSetSuccess() {
+		return SDASAddExposeResult_Success_DEFAULT
+	}
+	return p.Success
+}
+func (p *SDASAddExposeResult) SetSuccess(x interface{}) {
+	p.Success = x.(*AddExposeResponse)
+}
+
+var fieldIDToName_SDASAddExposeResult = map[int16]string{
+	0: "success",
+}
+
+func (p *SDASAddExposeResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
+func (p *SDASAddExposeResult) Read(iprot thrift.TProtocol) (err error) {
+
+	var fieldTypeId thrift.TType
+	var fieldId int16
+
+	if _, err = iprot.ReadStructBegin(); err != nil {
+		goto ReadStructBeginError
+	}
+
+	for {
+		_, fieldTypeId, fieldId, err = iprot.ReadFieldBegin()
+		if err != nil {
+			goto ReadFieldBeginError
+		}
+		if fieldTypeId == thrift.STOP {
+			break
+		}
+
+		switch fieldId {
+		case 0:
+			if fieldTypeId == thrift.STRUCT {
+				if err = p.ReadField0(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		default:
+			if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		}
+		if err = iprot.ReadFieldEnd(); err != nil {
+			goto ReadFieldEndError
+		}
+	}
+	if err = iprot.ReadStructEnd(); err != nil {
+		goto ReadStructEndError
+	}
+
+	return nil
+ReadStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
+ReadFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
+ReadFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_SDASAddExposeResult[fieldId]), err)
+SkipFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
+
+ReadFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
+ReadStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+}
+
+func (p *SDASAddExposeResult) ReadField0(iprot thrift.TProtocol) error {
+	p.Success = NewAddExposeResponse()
+	if err := p.Success.Read(iprot); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (p *SDASAddExposeResult) Write(oprot thrift.TProtocol) (err error) {
+	var fieldId int16
+	if err = oprot.WriteStructBegin("AddExpose_result"); err != nil {
+		goto WriteStructBeginError
+	}
+	if p != nil {
+		if err = p.writeField0(oprot); err != nil {
+			fieldId = 0
+			goto WriteFieldError
+		}
+	}
+	if err = oprot.WriteFieldStop(); err != nil {
+		goto WriteFieldStopError
+	}
+	if err = oprot.WriteStructEnd(); err != nil {
+		goto WriteStructEndError
+	}
+	return nil
+WriteStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err)
+WriteFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T write field %d error: ", p, fieldId), err)
+WriteFieldStopError:
+	return thrift.PrependError(fmt.Sprintf("%T write field stop error: ", p), err)
+WriteStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
+}
+
+func (p *SDASAddExposeResult) writeField0(oprot thrift.TProtocol) (err error) {
+	if p.IsSetSuccess() {
+		if err = oprot.WriteFieldBegin("success", thrift.STRUCT, 0); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := p.Success.Write(oprot); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 0 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 0 end error: ", p), err)
+}
+
+func (p *SDASAddExposeResult) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("SDASAddExposeResult(%+v)", *p)
+
+}
+
+func (p *SDASAddExposeResult) DeepEqual(ano *SDASAddExposeResult) bool {
+	if p == ano {
+		return true
+	} else if p == nil || ano == nil {
+		return false
+	}
+	if !p.Field0DeepEqual(ano.Success) {
+		return false
+	}
+	return true
+}
+
+func (p *SDASAddExposeResult) Field0DeepEqual(src *AddExposeResponse) bool {
+
+	if !p.Success.DeepEqual(src) {
+		return false
+	}
+	return true
+}
+
+type SDASRemoveExposeArgs struct {
+	Req *RemoveExposeRequest `thrift:"req,1" frugal:"1,default,RemoveExposeRequest" json:"req"`
+}
+
+func NewSDASRemoveExposeArgs() *SDASRemoveExposeArgs {
+	return &SDASRemoveExposeArgs{}
+}
+
+func (p *SDASRemoveExposeArgs) InitDefault() {
+	*p = SDASRemoveExposeArgs{}
+}
+
+var SDASRemoveExposeArgs_Req_DEFAULT *RemoveExposeRequest
+
+func (p *SDASRemoveExposeArgs) GetReq() (v *RemoveExposeRequest) {
+	if !p.IsSetReq() {
+		return SDASRemoveExposeArgs_Req_DEFAULT
+	}
+	return p.Req
+}
+func (p *SDASRemoveExposeArgs) SetReq(val *RemoveExposeRequest) {
+	p.Req = val
+}
+
+var fieldIDToName_SDASRemoveExposeArgs = map[int16]string{
+	1: "req",
+}
+
+func (p *SDASRemoveExposeArgs) IsSetReq() bool {
+	return p.Req != nil
+}
+
+func (p *SDASRemoveExposeArgs) Read(iprot thrift.TProtocol) (err error) {
+
+	var fieldTypeId thrift.TType
+	var fieldId int16
+
+	if _, err = iprot.ReadStructBegin(); err != nil {
+		goto ReadStructBeginError
+	}
+
+	for {
+		_, fieldTypeId, fieldId, err = iprot.ReadFieldBegin()
+		if err != nil {
+			goto ReadFieldBeginError
+		}
+		if fieldTypeId == thrift.STOP {
+			break
+		}
+
+		switch fieldId {
+		case 1:
+			if fieldTypeId == thrift.STRUCT {
+				if err = p.ReadField1(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		default:
+			if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		}
+		if err = iprot.ReadFieldEnd(); err != nil {
+			goto ReadFieldEndError
+		}
+	}
+	if err = iprot.ReadStructEnd(); err != nil {
+		goto ReadStructEndError
+	}
+
+	return nil
+ReadStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
+ReadFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
+ReadFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_SDASRemoveExposeArgs[fieldId]), err)
+SkipFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
+
+ReadFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
+ReadStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+}
+
+func (p *SDASRemoveExposeArgs) ReadField1(iprot thrift.TProtocol) error {
+	p.Req = NewRemoveExposeRequest()
+	if err := p.Req.Read(iprot); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (p *SDASRemoveExposeArgs) Write(oprot thrift.TProtocol) (err error) {
+	var fieldId int16
+	if err = oprot.WriteStructBegin("RemoveExpose_args"); err != nil {
+		goto WriteStructBeginError
+	}
+	if p != nil {
+		if err = p.writeField1(oprot); err != nil {
+			fieldId = 1
+			goto WriteFieldError
+		}
+	}
+	if err = oprot.WriteFieldStop(); err != nil {
+		goto WriteFieldStopError
+	}
+	if err = oprot.WriteStructEnd(); err != nil {
+		goto WriteStructEndError
+	}
+	return nil
+WriteStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err)
+WriteFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T write field %d error: ", p, fieldId), err)
+WriteFieldStopError:
+	return thrift.PrependError(fmt.Sprintf("%T write field stop error: ", p), err)
+WriteStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
+}
+
+func (p *SDASRemoveExposeArgs) writeField1(oprot thrift.TProtocol) (err error) {
+	if err = oprot.WriteFieldBegin("req", thrift.STRUCT, 1); err != nil {
+		goto WriteFieldBeginError
+	}
+	if err := p.Req.Write(oprot); err != nil {
+		return err
+	}
+	if err = oprot.WriteFieldEnd(); err != nil {
+		goto WriteFieldEndError
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 1 end error: ", p), err)
+}
+
+func (p *SDASRemoveExposeArgs) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("SDASRemoveExposeArgs(%+v)", *p)
+
+}
+
+func (p *SDASRemoveExposeArgs) DeepEqual(ano *SDASRemoveExposeArgs) bool {
+	if p == ano {
+		return true
+	} else if p == nil || ano == nil {
+		return false
+	}
+	if !p.Field1DeepEqual(ano.Req) {
+		return false
+	}
+	return true
+}
+
+func (p *SDASRemoveExposeArgs) Field1DeepEqual(src *RemoveExposeRequest) bool {
+
+	if !p.Req.DeepEqual(src) {
+		return false
+	}
+	return true
+}
+
+type SDASRemoveExposeResult struct {
+	Success *RemoveExposeResponse `thrift:"success,0,optional" frugal:"0,optional,RemoveExposeResponse" json:"success,omitempty"`
+}
+
+func NewSDASRemoveExposeResult() *SDASRemoveExposeResult {
+	return &SDASRemoveExposeResult{}
+}
+
+func (p *SDASRemoveExposeResult) InitDefault() {
+	*p = SDASRemoveExposeResult{}
+}
+
+var SDASRemoveExposeResult_Success_DEFAULT *RemoveExposeResponse
+
+func (p *SDASRemoveExposeResult) GetSuccess() (v *RemoveExposeResponse) {
+	if !p.IsSetSuccess() {
+		return SDASRemoveExposeResult_Success_DEFAULT
+	}
+	return p.Success
+}
+func (p *SDASRemoveExposeResult) SetSuccess(x interface{}) {
+	p.Success = x.(*RemoveExposeResponse)
+}
+
+var fieldIDToName_SDASRemoveExposeResult = map[int16]string{
+	0: "success",
+}
+
+func (p *SDASRemoveExposeResult) IsSetSuccess() bool {
+	return p.Success != nil
+}
+
+func (p *SDASRemoveExposeResult) Read(iprot thrift.TProtocol) (err error) {
+
+	var fieldTypeId thrift.TType
+	var fieldId int16
+
+	if _, err = iprot.ReadStructBegin(); err != nil {
+		goto ReadStructBeginError
+	}
+
+	for {
+		_, fieldTypeId, fieldId, err = iprot.ReadFieldBegin()
+		if err != nil {
+			goto ReadFieldBeginError
+		}
+		if fieldTypeId == thrift.STOP {
+			break
+		}
+
+		switch fieldId {
+		case 0:
+			if fieldTypeId == thrift.STRUCT {
+				if err = p.ReadField0(iprot); err != nil {
+					goto ReadFieldError
+				}
+			} else if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		default:
+			if err = iprot.Skip(fieldTypeId); err != nil {
+				goto SkipFieldError
+			}
+		}
+		if err = iprot.ReadFieldEnd(); err != nil {
+			goto ReadFieldEndError
+		}
+	}
+	if err = iprot.ReadStructEnd(); err != nil {
+		goto ReadStructEndError
+	}
+
+	return nil
+ReadStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct begin error: ", p), err)
+ReadFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d begin error: ", p, fieldId), err)
+ReadFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T read field %d '%s' error: ", p, fieldId, fieldIDToName_SDASRemoveExposeResult[fieldId]), err)
+SkipFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T field %d skip type %d error: ", p, fieldId, fieldTypeId), err)
+
+ReadFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read field end error", p), err)
+ReadStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T read struct end error: ", p), err)
+}
+
+func (p *SDASRemoveExposeResult) ReadField0(iprot thrift.TProtocol) error {
+	p.Success = NewRemoveExposeResponse()
+	if err := p.Success.Read(iprot); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (p *SDASRemoveExposeResult) Write(oprot thrift.TProtocol) (err error) {
+	var fieldId int16
+	if err = oprot.WriteStructBegin("RemoveExpose_result"); err != nil {
+		goto WriteStructBeginError
+	}
+	if p != nil {
+		if err = p.writeField0(oprot); err != nil {
+			fieldId = 0
+			goto WriteFieldError
+		}
+	}
+	if err = oprot.WriteFieldStop(); err != nil {
+		goto WriteFieldStopError
+	}
+	if err = oprot.WriteStructEnd(); err != nil {
+		goto WriteStructEndError
+	}
+	return nil
+WriteStructBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct begin error: ", p), err)
+WriteFieldError:
+	return thrift.PrependError(fmt.Sprintf("%T write field %d error: ", p, fieldId), err)
+WriteFieldStopError:
+	return thrift.PrependError(fmt.Sprintf("%T write field stop error: ", p), err)
+WriteStructEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write struct end error: ", p), err)
+}
+
+func (p *SDASRemoveExposeResult) writeField0(oprot thrift.TProtocol) (err error) {
+	if p.IsSetSuccess() {
+		if err = oprot.WriteFieldBegin("success", thrift.STRUCT, 0); err != nil {
+			goto WriteFieldBeginError
+		}
+		if err := p.Success.Write(oprot); err != nil {
+			return err
+		}
+		if err = oprot.WriteFieldEnd(); err != nil {
+			goto WriteFieldEndError
+		}
+	}
+	return nil
+WriteFieldBeginError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 0 begin error: ", p), err)
+WriteFieldEndError:
+	return thrift.PrependError(fmt.Sprintf("%T write field 0 end error: ", p), err)
+}
+
+func (p *SDASRemoveExposeResult) String() string {
+	if p == nil {
+		return "<nil>"
+	}
+	return fmt.Sprintf("SDASRemoveExposeResult(%+v)", *p)
+
+}
+
+func (p *SDASRemoveExposeResult) DeepEqual(ano *SDASRemoveExposeResult) bool {
+	if p == ano {
+		return true
+	} else if p == nil || ano == nil {
+		return false
+	}
+	if !p.Field0DeepEqual(ano.Success) {
+		return false
+	}
+	return true
+}
+
+func (p *SDASRemoveExposeResult) Field0DeepEqual(src *RemoveExposeResponse) bool {
 
 	if !p.Success.DeepEqual(src) {
 		return false

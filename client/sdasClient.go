@@ -124,6 +124,39 @@ func (c *SDASClient) RecvPullExposeStream() (*api.SourceMsg, error) {
 	return resp.SourceMsg, nil
 }
 
+func (c *SDASClient) AddExpose(Type, Name, SourceName string, Content map[string]string) error {
+	req := &api.AddExposeRequest{
+		Expose: &api.Expose{
+			Type:       Type,
+			Name:       Name,
+			SourceName: SourceName,
+			Content:    Content,
+		},
+	}
+	resp, err := c.c.AddExpose(context.Background(), req)
+	if err != nil {
+		return err
+	}
+	if resp.Code == -1 {
+		return errors.New(resp.Message)
+	}
+	return nil
+}
+
+func (c *SDASClient) RemoveExpose(Name string) error {
+	req := &api.RemoveExposeRequest{
+		Name: Name,
+	}
+	resp, err := c.c.RemoveExpose(context.Background(), req)
+	if err != nil {
+		return err
+	}
+	if resp.Code == -1 {
+		return errors.New(resp.Message)
+	}
+	return nil
+}
+
 func (c *SDASClient) Close() error {
 	if c.issc {
 		err := c.stream.Close()

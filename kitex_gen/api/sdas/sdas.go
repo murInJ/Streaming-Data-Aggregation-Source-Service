@@ -50,6 +50,20 @@ var serviceMethods = map[string]kitex.MethodInfo{
 		false,
 		kitex.WithStreamingMode(kitex.StreamingBidirectional),
 	),
+	"AddExpose": kitex.NewMethodInfo(
+		addExposeHandler,
+		newSDASAddExposeArgs,
+		newSDASAddExposeResult,
+		false,
+		kitex.WithStreamingMode(kitex.StreamingNone),
+	),
+	"RemoveExpose": kitex.NewMethodInfo(
+		removeExposeHandler,
+		newSDASRemoveExposeArgs,
+		newSDASRemoveExposeResult,
+		false,
+		kitex.WithStreamingMode(kitex.StreamingNone),
+	),
 }
 
 var (
@@ -237,6 +251,42 @@ func newSDASPullExposeStreamResult() interface{} {
 	return api.NewSDASPullExposeStreamResult()
 }
 
+func addExposeHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	realArg := arg.(*api.SDASAddExposeArgs)
+	realResult := result.(*api.SDASAddExposeResult)
+	success, err := handler.(api.SDAS).AddExpose(ctx, realArg.Req)
+	if err != nil {
+		return err
+	}
+	realResult.Success = success
+	return nil
+}
+func newSDASAddExposeArgs() interface{} {
+	return api.NewSDASAddExposeArgs()
+}
+
+func newSDASAddExposeResult() interface{} {
+	return api.NewSDASAddExposeResult()
+}
+
+func removeExposeHandler(ctx context.Context, handler interface{}, arg, result interface{}) error {
+	realArg := arg.(*api.SDASRemoveExposeArgs)
+	realResult := result.(*api.SDASRemoveExposeResult)
+	success, err := handler.(api.SDAS).RemoveExpose(ctx, realArg.Req)
+	if err != nil {
+		return err
+	}
+	realResult.Success = success
+	return nil
+}
+func newSDASRemoveExposeArgs() interface{} {
+	return api.NewSDASRemoveExposeArgs()
+}
+
+func newSDASRemoveExposeResult() interface{} {
+	return api.NewSDASRemoveExposeResult()
+}
+
 type kClient struct {
 	c client.Client
 }
@@ -297,4 +347,24 @@ func (p *kClient) PullExposeStream(ctx context.Context) (SDAS_PullExposeStreamCl
 	}
 	stream := &sDASPullExposeStreamClient{res.Stream}
 	return stream, nil
+}
+
+func (p *kClient) AddExpose(ctx context.Context, req *api.AddExposeRequest) (r *api.AddExposeResponse, err error) {
+	var _args api.SDASAddExposeArgs
+	_args.Req = req
+	var _result api.SDASAddExposeResult
+	if err = p.c.Call(ctx, "AddExpose", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
+}
+
+func (p *kClient) RemoveExpose(ctx context.Context, req *api.RemoveExposeRequest) (r *api.RemoveExposeResponse, err error) {
+	var _args api.SDASRemoveExposeArgs
+	_args.Req = req
+	var _result api.SDASRemoveExposeResult
+	if err = p.c.Call(ctx, "RemoveExpose", &_args, &_result); err != nil {
+		return
+	}
+	return _result.GetSuccess(), nil
 }

@@ -88,6 +88,7 @@ func (s *SDASImpl) PullExposeStream(stream api.SDAS_PullExposeStreamServer) (err
 			} else if recvErr != nil {
 				if flag {
 					entity.Stop()
+					expose.Exposes.Delete(msg.Expose.Name)
 				}
 				err = recvErr
 				return
@@ -125,6 +126,7 @@ func (s *SDASImpl) PullExposeStream(stream api.SDAS_PullExposeStreamServer) (err
 				flag = true
 			} else if op == config.CLOSE {
 				entity.Stop()
+				expose.Exposes.Delete(msg.Expose.Name)
 				flag = false
 				return
 			} else if flag && op == config.PLAY {
@@ -138,4 +140,33 @@ func (s *SDASImpl) PullExposeStream(stream api.SDAS_PullExposeStreamServer) (err
 	}()
 	wg.Wait()
 	return
+}
+
+// AddExpose implements the SDASImpl interface.
+func (s *SDASImpl) AddExpose(ctx context.Context, req *api.AddExposeRequest) (resp *api.AddExposeResponse, err error) {
+	err = expose.AddExpose(req.Expose.Name, req.Expose.Type, req.Expose.SourceName, req.Expose.Content)
+	if err != nil {
+		resp = &api.AddExposeResponse{
+			Code:    -1,
+			Message: err.Error(),
+		}
+		return resp, err
+	}
+
+	resp = &api.AddExposeResponse{
+		Code:    0,
+		Message: "success",
+	}
+
+	return resp, nil
+}
+
+// RemoveExpose implements the SDASImpl interface.
+func (s *SDASImpl) RemoveExpose(ctx context.Context, req *api.RemoveExposeRequest) (resp *api.RemoveExposeResponse, err error) {
+	expose.RemoveExpose(req.Name)
+	resp = &api.RemoveExposeResponse{
+		Code:    0,
+		Message: "success",
+	}
+	return resp, nil
 }

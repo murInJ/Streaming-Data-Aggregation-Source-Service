@@ -14,6 +14,7 @@
     - `remote` 从指定url的SDAS拉取数据
 3. Expose
    - `pull stream` 通过rpc stream获取指定源的数据
+   - `http push` 通过指定url进行http api接口推送数据
 ## Contributors
 <a href="https://github.com/MurInj/Streaming-Data-Aggregation-Source-Service/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=MurInj/Streaming-Data-Aggregation-Source-Service" />

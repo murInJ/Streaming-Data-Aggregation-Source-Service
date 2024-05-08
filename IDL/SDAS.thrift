@@ -11,4 +11,6 @@ service SDAS {
     expose.ListExposesResponse ListExposes()
 
     expose.PullExposeStreamResponse PullExposeStream(1: expose.PullExposeStreamRequest req) (streaming.mode="bidirectional")
+    expose.AddExposeResponse AddExpose(1: expose.AddExposeRequest req)
+    expose.RemoveExposeResponse RemoveExpose(1: expose.RemoveExposeRequest req)
 }
